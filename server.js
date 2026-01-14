@@ -1,11 +1,18 @@
 const express = require('express');
+const path = require('path'); // Essa é a bússola do servidor
 const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
   cors: { origin: "*" }
 });
 
-app.use(express.static('public'));
+// Configuração blindada: Diz pro servidor exatamente onde está a pasta 'public'
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Garantia extra: Se alguém acessar a raiz, entrega o arquivo do jogo
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 let jogadores = {};
 
@@ -20,10 +27,8 @@ io.on('connection', (socket) => {
 
     socket.emit('setupJogador', jogadores[socket.id]);
     
-    // Atualiza lista para todos
     io.emit('atualizarLista', jogadores);
 
-    // Recebe atualizações de pontuação (distância)
     socket.on('atualizarScore', (score) => {
         if(jogadores[socket.id]) {
             jogadores[socket.id].pontuacao = score;
