@@ -3,104 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TURBO BIANCA - V7</title>
+    <title>TURBO BIANCA - V8 Top Gear Style</title>
     <style>
-        /* Reset total para garantir tela cheia sem barras de rolagem */
-        html, body { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden; background: #000; font-family: 'Arial', sans-serif; 
-            touch-action: none; /* Impede zoom no celular */
-        }
-
-        #game-container { 
-            position: relative; 
-            width: 100vw; 
-            height: 100vh; 
-            overflow: hidden;
-        }
-
-        /* O Canvas agora é forçado a cobrir tudo, ficando ATRÁS da UI */
-        canvas { 
-            position: absolute; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            display: block; 
-            z-index: 1; 
-        }
-        
-        /* UI Sobreposta (HUD) */
-        #ui-layer { 
-            position: absolute; 
-            top: 20px; 
-            left: 20px; 
-            color: white; 
-            z-index: 10; /* Bem acima do jogo */
-            background: rgba(0, 0, 0, 0.3); /* Fundo escuro transparente para leitura */
-            padding: 10px 20px;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.2);
-            pointer-events: none; /* Garante que o toque passe através dele */
-        }
-
-        #score { font-size: 24px; font-weight: bold; color: #fff; }
-        #nivel-info { font-size: 14px; color: #f1c40f; text-transform: uppercase; letter-spacing: 1px;}
-        
-        /* Tela de Início */
-        #start-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); 
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center; 
-            color: white; z-index: 20; /* Acima de tudo */
-        }
-        h1 { font-size: 40px; font-style: italic; color: #ffeb3b; text-transform: uppercase; margin-bottom: 10px;}
-        
-        button { 
-            padding: 20px 60px; font-size: 20px; font-weight: bold; text-transform: uppercase;
-            background: linear-gradient(to bottom, #e84118, #c23616); 
-            color: white; border: none; border-radius: 50px; 
-            margin-top: 30px; cursor: pointer; box-shadow: 0 4px 15px rgba(232, 65, 24, 0.4);
-        }
-        button:active { transform: translateY(2px); }
-        
-        /* Controles Mobile */
-        .mobile-controls {
-            position: absolute; bottom: 30px; width: 100%; 
-            display: flex; justify-content: space-between; 
-            padding: 0 20px; box-sizing: border-box; 
-            pointer-events: none; z-index: 15;
-        }
-        .btn-control {
-            width: 80px; height: 80px; 
-            background: rgba(255,255,255,0.1); 
-            backdrop-filter: blur(5px);
-            border-radius: 50%; 
-            border: 2px solid rgba(255,255,255,0.3); 
-            pointer-events: auto; /* Esse precisa receber toque */
-            display: flex; justify-content: center; align-items: center; 
-            font-size: 30px; color: white; user-select: none;
-        }
-        .btn-control:active { background: rgba(255,255,255,0.3); transform: scale(0.95); }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Arial', sans-serif; touch-action: none; }
+        #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden;}
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; z-index: 1; }
+        #ui-layer { position: absolute; top: 20px; left: 20px; color: white; z-index: 10; background: rgba(0, 0, 0, 0.4); padding: 10px 25px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.1); pointer-events: none; backdrop-filter: blur(5px); box-shadow: 0 4px 6px rgba(0,0,0,0.3);}
+        #score { font-size: 28px; font-weight: 900; color: #f1c40f; text-shadow: 2px 2px 0 #c23616; }
+        #nivel-info { font-size: 16px; color: #ecf0f1; text-transform: uppercase; letter-spacing: 2px; font-weight: bold;}
+        #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; z-index: 20; }
+        h1 { font-size: 40px; font-style: italic; color: #ffeb3b; text-transform: uppercase; margin-bottom: 10px; text-shadow: 3px 3px 0 #e84118;}
+        button { padding: 20px 60px; font-size: 20px; font-weight: bold; text-transform: uppercase; background: linear-gradient(to bottom, #e84118, #c23616); color: white; border: none; border-radius: 50px; margin-top: 30px; cursor: pointer; box-shadow: 0 4px 15px rgba(232, 65, 24, 0.4); transition: transform 0.1s;}
+        button:active { transform: scale(0.95); }
+        .mobile-controls { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; box-sizing: border-box; pointer-events: none; z-index: 15; }
+        .btn-control { width: 80px; height: 80px; background: rgba(255,255,255,0.15); backdrop-filter: blur(5px); border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); pointer-events: auto; display: flex; justify-content: center; align-items: center; font-size: 30px; color: white; user-select: none; transition: background 0.2s;}
+        .btn-control:active { background: rgba(255,255,255,0.4); transform: scale(0.95); }
     </style>
 </head>
 <body>
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
-        
         <div id="ui-layer">
             SCORE: <span id="score">0</span> <br>
             <span id="nivel-info">Nível 1</span>
         </div>
-
         <div class="mobile-controls" id="mobileControls" style="display:none;">
             <div class="btn-control" id="btnLeft">◀</div>
             <div class="btn-control" id="btnRight">▶</div>
         </div>
-
         <div id="start-screen">
             <h1>Turbo Bianca</h1>
-            <p>Tela Cheia + HUD</p>
-            <button onclick="iniciarJogo()">ACELERAR</button>
+            <p>V8: Estilo Top Gear + Física</p>
+            <button onclick="iniciarJogo()">LIGAR MOTORES</button>
         </div>
     </div>
 
@@ -117,14 +51,10 @@
         window.addEventListener('resize', resize);
         resize();
 
-        // --- GEOMETRIA DA PISTA (HORIZONTE ALTO) ---
-        // Aqui definimos que o céu ocupa apenas 35% da tela. A pista ocupa 65%.
         const PCT_CEU = 0.35; 
-        
         const LARGURA_PISTA_TOPO = 100; 
         const LARGURA_PISTA_BASE = window.innerWidth > 800 ? 800 : window.innerWidth; 
 
-        // --- CONFIGURAÇÕES ---
         let jogoRodando = false;
         let frameId;
         let pontuacao = 0;
@@ -133,131 +63,209 @@
         let tempoTotalPista = 3.0; 
         let offsetPista = 0;
         
-        const ESCALA_JOGADOR = 1.5; 
+        const ESCALA_JOGADOR = 1.8; // Carro ligeiramente maior
         const ESCALA_HORIZONTE = 0.05;
 
-        let jogador = { faixa: 1, x: 0, y: 0, cor: '#e84118', w: 60, h: 50 };
+        // Adicionamos propriedades de inclinação (tilt) ao jogador
+        let jogador = { 
+            faixa: 1, x: 0, y: 0, cor: '#e84118', w: 60, h: 50,
+            tiltAtual: 0,    // Inclinação atual em graus
+            tiltAlvo: 0      // Para onde ele quer inclinar (-10, 0 ou 10)
+        };
         let obstaculos = [];
-        let cenarioObjetos = []; 
+        let cenarioObjetos = [];
+        let particulasFumaca = []; // Array para o sistema de partículas
 
-        // --- FUNÇÕES DE GEOMETRIA (Adaptadas para horizonte dinâmico) ---
-        function getHorizonteY() {
-            return canvas.height * PCT_CEU;
-        }
+        // --- GEOMETRIA BÁSICA ---
+        function getHorizonteY() { return canvas.height * PCT_CEU; }
+        function getYPorProgresso(p) { const h = getHorizonteY(); const alturaPista = canvas.height - h; return h + (alturaPista * (p * p)); }
+        function getLarguraPistaNoY(y) { const h = getHorizonteY(); const alturaPista = canvas.height - h; if (y < h) return LARGURA_PISTA_TOPO; const progressoLinear = (y - h) / alturaPista; return LARGURA_PISTA_TOPO + (LARGURA_PISTA_BASE - LARGURA_PISTA_TOPO) * progressoLinear; }
+        function getXNaPista(faixa, y) { const larguraAtual = getLarguraPistaNoY(y); const centro = canvas.width / 2; const indiceFaixa = faixa - 1; return centro + (indiceFaixa * (larguraAtual / 3)); }
 
-        function getYPorProgresso(p) {
-            const h = getHorizonteY();
-            const alturaPista = canvas.height - h;
-            // Curva quadrática para perspectiva
-            return h + (alturaPista * (p * p)); 
-        }
-
-        function getLarguraPistaNoY(y) {
-            const h = getHorizonteY();
-            const alturaPista = canvas.height - h;
-            // Proteção contra divisão por zero se y < h
-            if (y < h) return LARGURA_PISTA_TOPO;
+        // --- NOVO ARTE: CARRO ESTILO TOP GEAR (V8) ---
+        function desenharCarroTopGear(ctx, x, y, scale, corPrincipal, isObstacle) {
+            const w = 70 * scale; // Base mais larga
+            const h = 40 * scale; // Mais baixo
             
-            const progressoLinear = (y - h) / alturaPista;
-            return LARGURA_PISTA_TOPO + (LARGURA_PISTA_BASE - LARGURA_PISTA_TOPO) * progressoLinear;
-        }
+            ctx.save();
+            ctx.translate(x, y);
 
-        function getXNaPista(faixa, y) {
-            const larguraAtual = getLarguraPistaNoY(y);
-            const centro = canvas.width / 2;
-            const indiceFaixa = faixa - 1; 
-            const larguraFaixa = larguraAtual / 3;
-            return centro + (indiceFaixa * larguraFaixa);
-        }
+            // Sombra no chão
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.beginPath();
+            ctx.ellipse(0, h*0.8, w*0.6, h*0.2, 0, 0, Math.PI*2);
+            ctx.fill();
 
-        // --- ARTE ---
-        function desenharSpriteCarro(ctx, x, y, scale, corPrincipal) {
-            const w = 60 * scale; const h = 50 * scale; 
-            ctx.fillStyle = '#111';
-            ctx.fillRect(x - w*0.1, y + h*0.6, w*0.2, h*0.4);
-            ctx.fillRect(x + w*0.9, y + h*0.6, w*0.2, h*0.4);
+            // Pneus Largos
+            ctx.fillStyle = '#222';
+            const pneuW = w*0.25; const pneuH = h*0.5;
+            ctx.fillRect(-w/2 - pneuW/2, h*0.3, pneuW, pneuH); // Esq
+            ctx.fillRect(w/2 - pneuW/2, h*0.3, pneuW, pneuH);  // Dir
+
+            // Chassi Principal (Trapézio largo na base)
             ctx.fillStyle = corPrincipal;
-            ctx.fillRect(x, y + h*0.4, w, h*0.6); 
-            ctx.fillRect(x + w*0.15, y, w*0.7, h*0.4);
-            ctx.fillStyle = '#87ceeb';
-            ctx.fillRect(x + w*0.2, y + h*0.05, w*0.6, h*0.3);
-            ctx.fillStyle = '#c0392b';
-            ctx.fillRect(x + w*0.05, y + h*0.5, w*0.2, h*0.15); 
-            ctx.fillRect(x + w*0.75, y + h*0.5, w*0.2, h*0.15); 
+            ctx.beginPath();
+            ctx.moveTo(-w/2, h);   // Base Esq
+            ctx.lineTo(w/2, h);    // Base Dir
+            ctx.lineTo(w*0.4, 0);  // Topo Dir
+            ctx.lineTo(-w*0.4, 0); // Topo Esq
+            ctx.fill();
+
+            // Cabine/Vidro Traseiro (Trapézio mais estreito em cima)
+            ctx.fillStyle = '#111'; // Moldura do vidro
+            ctx.beginPath();
+            ctx.moveTo(-w*0.35, h*0.1); 
+            ctx.lineTo(w*0.35, h*0.1);
+            ctx.lineTo(w*0.25, -h*0.3); 
+            ctx.lineTo(-w*0.25, -h*0.3);
+            ctx.fill();
+            
+            // Reflexo no vidro
+            ctx.fillStyle = isObstacle ? '#555' : '#87ceeb'; 
+            ctx.beginPath();
+            ctx.moveTo(-w*0.3, h*0.05);
+            ctx.lineTo(w*0.3, h*0.05);
+            ctx.lineTo(w*0.2, -h*0.25);
+            ctx.lineTo(-w*0.2, -h*0.25);
+            ctx.fill();
+
+            // Aerofólio (Spoiler)
+            ctx.fillStyle = corPrincipal;
+            ctx.fillRect(-w*0.45, -h*0.4, w*0.9, h*0.15); // Asa
+            ctx.fillStyle = '#222'; // Suportes
+            ctx.fillRect(-w*0.2, -h*0.3, w*0.05, h*0.3);
+            ctx.fillRect(w*0.15, -h*0.3, w*0.05, h*0.3);
+
+            // Lanternas Traseiras Estilo anos 90 (Faixa larga)
+            ctx.fillStyle = '#c0392b'; // Vermelho base
+            ctx.fillRect(-w*0.45, h*0.4, w*0.9, h*0.25);
+            
+            // Detalhes da lanterna (luz de freio e ré)
+            ctx.fillStyle = '#ff3838'; // Luz de freio brilhante
+            ctx.fillRect(-w*0.42, h*0.45, w*0.25, h*0.15);
+            ctx.fillRect(w*0.17, h*0.45, w*0.25, h*0.15);
+            
+            if(!isObstacle) {
+                ctx.fillStyle = '#ecf0f1'; // Luz de ré (só no jogador)
+                ctx.fillRect(-w*0.1, h*0.45, w*0.2, h*0.15);
+            }
+
+            // Placa
+            ctx.fillStyle = '#f1c40f';
+            ctx.fillRect(-w*0.15, h*0.7, w*0.3, h*0.15);
+
+            ctx.restore();
         }
 
+        // --- SISTEMA DE PARTICULAS (FUMAÇA) ---
+        function gerarFumaca(x, y) {
+            particulasFumaca.push({
+                x: x - 30, y: y + 20, // Pneu esquerdo
+                vx: (Math.random() - 0.5) * 2, vy: Math.random() * 2 + 1,
+                radius: Math.random() * 5 + 2, alpha: 0.8
+            });
+            particulasFumaca.push({
+                x: x + 30, y: y + 20, // Pneu direito
+                vx: (Math.random() - 0.5) * 2, vy: Math.random() * 2 + 1,
+                radius: Math.random() * 5 + 2, alpha: 0.8
+            });
+        }
+
+        function desenharFumaca() {
+            ctx.fillStyle = 'rgba(150, 150, 150, 0.8)';
+            for (let i = particulasFumaca.length - 1; i >= 0; i--) {
+                let p = particulasFumaca[i];
+                p.y -= p.vy; // Sobe
+                p.x += p.vx; // Espalha
+                p.radius += 0.5; // Cresce
+                p.alpha -= 0.02; // Desaparece
+                
+                if (p.alpha <= 0) {
+                    particulasFumaca.splice(i, 1);
+                    continue;
+                }
+                
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(180, 180, 180, ${p.alpha})`;
+                ctx.fill();
+            }
+        }
+
+        // --- ARTE CENARIO ---
         function desenharArvore(ctx, x, y, scale) {
             const w = 40 * scale; const h = 80 * scale;
             ctx.fillStyle = '#4b3621'; ctx.fillRect(x - w*0.2, y + h*0.8, w*0.4, h*0.2);
-            ctx.fillStyle = '#0f520f'; ctx.beginPath();
-            ctx.moveTo(x, y); ctx.lineTo(x + w/2, y + h*0.8); ctx.lineTo(x - w/2, y + h*0.8); ctx.fill();
+            ctx.fillStyle = '#0f520f'; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w/2, y + h*0.8); ctx.lineTo(x - w/2, y + h*0.8); ctx.fill();
+            // Highlight na árvore
+            ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w/2, y + h*0.8); ctx.lineTo(x, y + h*0.8); ctx.fill();
         }
-
         function desenharPedra(ctx, x, y, scale) {
             const w = 30 * scale; const h = 20 * scale;
             ctx.fillStyle = '#555'; ctx.beginPath(); ctx.arc(x, y + h/2, w/2, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#777'; ctx.beginPath(); ctx.arc(x - w*0.1, y + h*0.4, w*0.3, 0, Math.PI * 2); ctx.fill();
         }
 
-        // --- CENÁRIO ---
+        // --- CORE DO JOGO ---
         function desenharFundo() {
             const h = getHorizonteY();
-            ctx.fillStyle = '#192a56'; ctx.fillRect(0, 0, canvas.width, h); // Céu
+            // Gradiente no céu estilo retrô
+            let grd = ctx.createLinearGradient(0, 0, 0, h);
+            grd.addColorStop(0, "#0c2461"); grd.addColorStop(1, "#4a69bd");
+            ctx.fillStyle = grd; ctx.fillRect(0, 0, canvas.width, h);
             ctx.fillStyle = '#273c75'; ctx.fillRect(0, h, canvas.width, canvas.height - h); // Grama
         }
 
         function desenharEstrada(velocidadeProgresso) {
             const h = getHorizonteY(); const centro = canvas.width / 2;
-            ctx.fillStyle = '#7f8fa6'; 
-            ctx.beginPath();
-            ctx.moveTo(centro - LARGURA_PISTA_TOPO/2, h); 
-            ctx.lineTo(centro + LARGURA_PISTA_TOPO/2, h); 
-            ctx.lineTo(centro + LARGURA_PISTA_BASE/2, canvas.height); 
-            ctx.lineTo(centro - LARGURA_PISTA_BASE/2, canvas.height); 
-            ctx.fill();
+            ctx.fillStyle = '#7f8fa6'; ctx.beginPath();
+            ctx.moveTo(centro - LARGURA_PISTA_TOPO/2, h); ctx.lineTo(centro + LARGURA_PISTA_TOPO/2, h); ctx.lineTo(centro + LARGURA_PISTA_BASE/2, canvas.height); ctx.lineTo(centro - LARGURA_PISTA_BASE/2, canvas.height); ctx.fill();
 
-            offsetPista += velocidadeProgresso * 3000; 
-            if (offsetPista > 100) offsetPista = 0;
-            
-            ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 4;
-            ctx.setLineDash([50, 50]); ctx.lineDashOffset = -offsetPista;
+            offsetPista += velocidadeProgresso * 4000; if (offsetPista > 120) offsetPista = 0;
+            ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 6;
+            ctx.setLineDash([60, 60]); ctx.lineDashOffset = -offsetPista;
             ctx.beginPath();
             ctx.moveTo(centro - LARGURA_PISTA_TOPO/6, h); ctx.lineTo(centro - LARGURA_PISTA_BASE/6, canvas.height);
             ctx.moveTo(centro + LARGURA_PISTA_TOPO/6, h); ctx.lineTo(centro + LARGURA_PISTA_BASE/6, canvas.height);
             ctx.stroke(); ctx.setLineDash([]); 
         }
 
-        // --- OBJETOS E JOGADOR ---
         function desenharJogador() {
-            // Jogador fica a 120px do fundo da tela (independente do horizonte)
-            jogador.y = canvas.height - 120; 
-            jogador.x = getXNaPista(jogador.faixa, jogador.y) - (60 * ESCALA_JOGADOR / 2);
-            desenharSpriteCarro(ctx, jogador.x, jogador.y, ESCALA_JOGADOR, jogador.cor);
+            jogador.y = canvas.height - 140; // Um pouco mais alto
+            jogador.x = getXNaPista(jogador.faixa, jogador.y);
+            
+            // --- FÍSICA DE INCLINAÇÃO (LERP) ---
+            // Aproxima suavemente a inclinação atual do alvo
+            jogador.tiltAtual += (jogador.tiltAlvo - jogador.tiltAtual) * 0.1;
+
+            // Gera fumaça
+            if(frameId % 3 === 0) gerarFumaca(jogador.x, jogador.y);
+
+            ctx.save();
+            // Translada para o ponto de pivô (centro inferior do carro)
+            ctx.translate(jogador.x, jogador.y + 20);
+            // Rotaciona
+            ctx.rotate(jogador.tiltAtual * Math.PI / 180);
+            // Desenha o carro novo (com offset negativo para compensar o pivô)
+            desenharCarroTopGear(ctx, 0, -20, ESCALA_JOGADOR, jogador.cor, false);
+            ctx.restore();
         }
 
         function gerenciarCenarioLateral(progressoPorFrame) {
-            if (Math.random() < 0.05) { 
-                cenarioObjetos.push({
-                    tipo: Math.random() > 0.7 ? 'pedra' : 'arvore',
-                    lado: Math.random() > 0.5 ? 1 : -1,
-                    progresso: 0,
-                    offsetAleatorio: Math.random() * 50 
-                });
+            if (Math.random() < 0.08) { 
+                cenarioObjetos.push({ tipo: Math.random() > 0.7 ? 'pedra' : 'arvore', lado: Math.random() > 0.5 ? 1 : -1, progresso: 0, offsetAleatorio: Math.random() * 50 });
             }
             const centro = canvas.width / 2;
             for (let i = cenarioObjetos.length - 1; i >= 0; i--) {
                 let obj = cenarioObjetos[i];
                 obj.progresso += progressoPorFrame; 
                 const y = getYPorProgresso(obj.progresso);
-                let scale = ESCALA_HORIZONTE + (ESCALA_JOGADOR * 1.5 - ESCALA_HORIZONTE) * obj.progresso;
+                let scale = ESCALA_HORIZONTE + (ESCALA_JOGADOR * 1.8 - ESCALA_HORIZONTE) * obj.progresso;
                 if (scale < 0) scale = 0;
-                
                 const larguraPistaAqui = getLarguraPistaNoY(y);
-                const distanciaDoCentro = (larguraPistaAqui / 2) + (40 * scale) + obj.offsetAleatorio;
+                const distanciaDoCentro = (larguraPistaAqui / 2) + (50 * scale) + obj.offsetAleatorio;
                 const x = centro + (distanciaDoCentro * obj.lado);
-
-                if (obj.tipo === 'arvore') desenharArvore(ctx, x, y, scale * 2);
-                else desenharPedra(ctx, x, y, scale * 1.5);
-
+                if (obj.tipo === 'arvore') desenharArvore(ctx, x, y, scale * 2.5); else desenharPedra(ctx, x, y, scale * 1.8);
                 if (obj.progresso > 1.1) cenarioObjetos.splice(i, 1);
             }
         }
@@ -268,10 +276,8 @@
             else if (obstaculos[obstaculos.length - 1].progresso > 0.5) podeSpawnar = true;
 
             if (podeSpawnar) {
-                const cores = ['#4cd137', '#0097e6', '#8c7ae6', '#fbc531'];
-                obstaculos.push({
-                    faixa: Math.floor(Math.random() * 3), progresso: 0, cor: cores[Math.floor(Math.random() * cores.length)]
-                });
+                const cores = ['#2ecc71', '#3498db', '#9b59b6', '#f1c40f', '#e67e22'];
+                obstaculos.push({ faixa: Math.floor(Math.random() * 3), progresso: 0, cor: cores[Math.floor(Math.random() * cores.length)] });
             }
 
             for (let i = obstaculos.length - 1; i >= 0; i--) {
@@ -279,13 +285,17 @@
                 obs.progresso += progressoPorFrame;
                 obs.y = getYPorProgresso(obs.progresso);
                 let scale = ESCALA_HORIZONTE + (ESCALA_JOGADOR - ESCALA_HORIZONTE) * obs.progresso;
-                
-                const x = getXNaPista(obs.faixa, obs.y) - (60 * scale / 2);
+                const x = getXNaPista(obs.faixa, obs.y);
 
-                if (obs.progresso < 1.2) desenharSpriteCarro(ctx, x, obs.y, scale, obs.cor);
+                if (obs.progresso < 1.1) {
+                    // Desenha obstáculo com o novo modelo
+                    desenharCarroTopGear(ctx, x, obs.y, scale, obs.cor, true);
+                }
 
-                if (obs.progresso > 0.85 && obs.progresso < 0.95) {
-                    if (obs.faixa === jogador.faixa) gameOver();
+                if (obs.progresso > 0.88 && obs.progresso < 0.98) {
+                    // Hitbox um pouco mais permissiva nas laterais
+                    const distanciaX = Math.abs(x - jogador.x);
+                    if (obs.faixa === jogador.faixa && distanciaX < 30) gameOver();
                 }
                 if (obs.progresso > 1.2) obstaculos.splice(i, 1);
             }
@@ -296,10 +306,11 @@
             if (tempoDecorrido - ultimoTempoNivel >= 20) {
                 ultimoTempoNivel = tempoDecorrido;
                 if (tempoTotalPista > 1.0) {
-                    tempoTotalPista -= 0.5;
+                    tempoTotalPista -= 0.4;
                     const tempoEtapa = tempoTotalPista / 6;
-                    document.getElementById('nivel-info').innerText = "TURBO!";
-                    setTimeout(() => { document.getElementById('nivel-info').innerText = `Etapa: ${tempoEtapa.toFixed(2)}s`; }, 2000);
+                    const nivelInfo = document.getElementById('nivel-info');
+                    nivelInfo.innerText = ">> TURBO BOOST <<"; nivelInfo.style.color = '#e74c3c';
+                    setTimeout(() => { nivelInfo.innerText = `ETAPA: ${tempoEtapa.toFixed(2)}s`; nivelInfo.style.color = '#ecf0f1'; }, 2000);
                 }
             }
         }
@@ -307,17 +318,14 @@
         function loop() {
             if (!jogoRodando) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
             atualizarNivel();
             const velocidadeAtual = 1.0 / (tempoTotalPista * 60);
-            
             desenharFundo();
             gerenciarCenarioLateral(velocidadeAtual);
             desenharEstrada(velocidadeAtual);
-            
-            pontuacao++;
-            document.getElementById('score').innerText = Math.floor(pontuacao/10);
-            
+            // Desenha fumaça antes do carro
+            desenharFumaca();
+            pontuacao++; document.getElementById('score').innerText = Math.floor(pontuacao/10).toString().padStart(4, '0');
             gerenciarObstaculos(velocidadeAtual);
             desenharJogador();
             frameId = requestAnimationFrame(loop);
@@ -326,38 +334,53 @@
         function iniciarJogo() {
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('mobileControls').style.display = 'flex';
-            jogoRodando = true;
-            tempoDecorrido = 0; ultimoTempoNivel = 0; tempoTotalPista = 3.0; 
-            pontuacao = 0; obstaculos = []; cenarioObjetos = [];
-            
-            // Força tela cheia no Android
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen().catch((e)=>{console.log(e)});
-            }
-            
+            jogoRodando = true; tempoDecorrido = 0; ultimoTempoNivel = 0; tempoTotalPista = 3.0; 
+            pontuacao = 0; obstaculos = []; cenarioObjetos = []; particulasFumaca = [];
+            jogador.tiltAtual = 0; jogador.tiltAlvo = 0;
+            if (document.documentElement.requestFullscreen) { document.documentElement.requestFullscreen().catch((e)=>{}); }
             loop();
         }
 
         function gameOver() {
-            jogoRodando = false;
-            cancelAnimationFrame(frameId);
-            alert(`BATIDA!`); location.reload();
+            jogoRodando = false; cancelAnimationFrame(frameId);
+            setTimeout(() => { alert(`BATIDA! Score Final: ${Math.floor(pontuacao/10)}`); location.reload(); }, 100);
         }
 
+        // --- CONTROLES COM FÍSICA DE TILT ---
         function mover(direcao) {
             if (!jogoRodando) return;
             let novaFaixa = jogador.faixa + direcao;
-            if (novaFaixa >= 0 && novaFaixa <= 2) jogador.faixa = novaFaixa;
+            if (novaFaixa >= 0 && novaFaixa <= 2) {
+                jogador.faixa = novaFaixa;
+                // Define o alvo da inclinação (ex: 10 graus para direita, -10 para esquerda)
+                jogador.tiltAlvo = direcao * 12; 
+            }
+        }
+
+        // Quando solta a tecla/toque, o carro deve endireitar
+        function endireitar() {
+             if (!jogoRodando) return;
+             jogador.tiltAlvo = 0;
         }
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft' || e.key === 'a') mover(-1);
-            if (e.key === 'ArrowRight' || e.key === 'd') mover(1);
+            if (!jogoRodando) return;
+            if ((e.key === 'ArrowLeft' || e.key === 'a') && jogador.faixa > 0) mover(-1);
+            if ((e.key === 'ArrowRight' || e.key === 'd') && jogador.faixa < 2) mover(1);
         });
+        // Novo: detectar quando solta a tecla para endireitar o carro
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'ArrowRight' || e.key === 'd') endireitar();
+        });
+
         const btnLeft = document.getElementById('btnLeft');
         const btnRight = document.getElementById('btnRight');
+        // Touchstart inicia o movimento e inclinação
         btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); mover(-1); });
         btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); mover(1); });
+        // Touchend endireita o carro
+        btnLeft.addEventListener('touchend', (e) => { e.preventDefault(); endireitar(); });
+        btnRight.addEventListener('touchend', (e) => { e.preventDefault(); endireitar(); });
     </script>
 </body>
 </html>
