@@ -3,57 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TURBO BIANCA - V6</title>
+    <title>TURBO BIANCA - V7</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #111; font-family: 'Arial', sans-serif; touch-action: none; }
-        #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; background: #000; }
-        canvas { display: block; max-width: 100%; max-height: 100%; }
+        /* Reset total para garantir tela cheia sem barras de rolagem */
+        html, body { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; background: #000; font-family: 'Arial', sans-serif; 
+            touch-action: none; /* Impede zoom no celular */
+        }
+
+        #game-container { 
+            position: relative; 
+            width: 100vw; 
+            height: 100vh; 
+            overflow: hidden;
+        }
+
+        /* O Canvas agora é forçado a cobrir tudo, ficando ATRÁS da UI */
+        canvas { 
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            display: block; 
+            z-index: 1; 
+        }
         
-        #ui-layer { position: absolute; top: 20px; left: 20px; color: white; z-index: 5; font-size: 18px; text-shadow: 2px 2px 0 #000; font-weight: bold;}
+        /* UI Sobreposta (HUD) */
+        #ui-layer { 
+            position: absolute; 
+            top: 20px; 
+            left: 20px; 
+            color: white; 
+            z-index: 10; /* Bem acima do jogo */
+            background: rgba(0, 0, 0, 0.3); /* Fundo escuro transparente para leitura */
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            pointer-events: none; /* Garante que o toque passe através dele */
+        }
+
+        #score { font-size: 24px; font-weight: bold; color: #fff; }
+        #nivel-info { font-size: 14px; color: #f1c40f; text-transform: uppercase; letter-spacing: 1px;}
         
+        /* Tela de Início */
         #start-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; color: white; z-index: 10;
+            background: rgba(0,0,0,0.85); 
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; 
+            color: white; z-index: 20; /* Acima de tudo */
         }
-        h1 { margin: 0 0 10px 0; font-size: 40px; font-style: italic; color: #ffeb3b; text-transform: uppercase; }
-        button { 
-            padding: 20px 60px; font-size: 24px; font-weight: bold; text-transform: uppercase;
-            background: #e84118; color: white; border: none; border-radius: 5px; 
-            margin-top: 30px; cursor: pointer; box-shadow: 0 5px 0 #c23616;
-        }
-        button:active { transform: translateY(4px); box-shadow: none; }
+        h1 { font-size: 40px; font-style: italic; color: #ffeb3b; text-transform: uppercase; margin-bottom: 10px;}
         
+        button { 
+            padding: 20px 60px; font-size: 20px; font-weight: bold; text-transform: uppercase;
+            background: linear-gradient(to bottom, #e84118, #c23616); 
+            color: white; border: none; border-radius: 50px; 
+            margin-top: 30px; cursor: pointer; box-shadow: 0 4px 15px rgba(232, 65, 24, 0.4);
+        }
+        button:active { transform: translateY(2px); }
+        
+        /* Controles Mobile */
         .mobile-controls {
-            position: absolute; bottom: 20px; width: 100%; display: flex; 
-            justify-content: space-between; padding: 0 30px; box-sizing: border-box; 
-            pointer-events: none; z-index: 20;
+            position: absolute; bottom: 30px; width: 100%; 
+            display: flex; justify-content: space-between; 
+            padding: 0 20px; box-sizing: border-box; 
+            pointer-events: none; z-index: 15;
         }
         .btn-control {
-            width: 90px; height: 90px; background: rgba(255,255,255,0.15); 
-            border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); 
-            pointer-events: auto; display: flex; justify-content: center; 
-            align-items: center; font-size: 40px; color: white; user-select: none;
+            width: 80px; height: 80px; 
+            background: rgba(255,255,255,0.1); 
+            backdrop-filter: blur(5px);
+            border-radius: 50%; 
+            border: 2px solid rgba(255,255,255,0.3); 
+            pointer-events: auto; /* Esse precisa receber toque */
+            display: flex; justify-content: center; align-items: center; 
+            font-size: 30px; color: white; user-select: none;
         }
-        .btn-control:active { background: rgba(255,255,255,0.4); }
+        .btn-control:active { background: rgba(255,255,255,0.3); transform: scale(0.95); }
     </style>
 </head>
 <body>
-    <div id="start-screen">
-        <h1>Turbo Bianca - v6</h1>
-        <p>V6: Paisagem Adicionada</p>
-        <button onclick="iniciarJogo()">START</button>
-    </div>
-
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
+        
         <div id="ui-layer">
             SCORE: <span id="score">0</span> <br>
-            <span id="nivel-info" style="font-size: 14px; color: #f1c40f;">Nível 1</span>
+            <span id="nivel-info">Nível 1</span>
         </div>
+
         <div class="mobile-controls" id="mobileControls" style="display:none;">
             <div class="btn-control" id="btnLeft">◀</div>
             <div class="btn-control" id="btnRight">▶</div>
+        </div>
+
+        <div id="start-screen">
+            <h1>Turbo Bianca</h1>
+            <p>Tela Cheia + HUD</p>
+            <button onclick="iniciarJogo()">ACELERAR</button>
         </div>
     </div>
 
@@ -70,19 +117,20 @@
         window.addEventListener('resize', resize);
         resize();
 
-        // --- GEOMETRIA DA PISTA ---
+        // --- GEOMETRIA DA PISTA (HORIZONTE ALTO) ---
+        // Aqui definimos que o céu ocupa apenas 35% da tela. A pista ocupa 65%.
+        const PCT_CEU = 0.35; 
+        
         const LARGURA_PISTA_TOPO = 100; 
         const LARGURA_PISTA_BASE = window.innerWidth > 800 ? 800 : window.innerWidth; 
 
-        // --- CONFIGURAÇÕES DO JOGO ---
+        // --- CONFIGURAÇÕES ---
         let jogoRodando = false;
         let frameId;
         let pontuacao = 0;
-        
         let tempoDecorrido = 0;
         let ultimoTempoNivel = 0;
         let tempoTotalPista = 3.0; 
-        
         let offsetPista = 0;
         
         const ESCALA_JOGADOR = 1.5; 
@@ -90,10 +138,39 @@
 
         let jogador = { faixa: 1, x: 0, y: 0, cor: '#e84118', w: 60, h: 50 };
         let obstaculos = [];
-        // NOVO: Array para árvores e pedras
         let cenarioObjetos = []; 
 
-        // --- ARTE: CARRO ---
+        // --- FUNÇÕES DE GEOMETRIA (Adaptadas para horizonte dinâmico) ---
+        function getHorizonteY() {
+            return canvas.height * PCT_CEU;
+        }
+
+        function getYPorProgresso(p) {
+            const h = getHorizonteY();
+            const alturaPista = canvas.height - h;
+            // Curva quadrática para perspectiva
+            return h + (alturaPista * (p * p)); 
+        }
+
+        function getLarguraPistaNoY(y) {
+            const h = getHorizonteY();
+            const alturaPista = canvas.height - h;
+            // Proteção contra divisão por zero se y < h
+            if (y < h) return LARGURA_PISTA_TOPO;
+            
+            const progressoLinear = (y - h) / alturaPista;
+            return LARGURA_PISTA_TOPO + (LARGURA_PISTA_BASE - LARGURA_PISTA_TOPO) * progressoLinear;
+        }
+
+        function getXNaPista(faixa, y) {
+            const larguraAtual = getLarguraPistaNoY(y);
+            const centro = canvas.width / 2;
+            const indiceFaixa = faixa - 1; 
+            const larguraFaixa = larguraAtual / 3;
+            return centro + (indiceFaixa * larguraFaixa);
+        }
+
+        // --- ARTE ---
         function desenharSpriteCarro(ctx, x, y, scale, corPrincipal) {
             const w = 60 * scale; const h = 50 * scale; 
             ctx.fillStyle = '#111';
@@ -109,62 +186,27 @@
             ctx.fillRect(x + w*0.75, y + h*0.5, w*0.2, h*0.15); 
         }
 
-        // --- NOVO: ARTE PAISAGEM ---
         function desenharArvore(ctx, x, y, scale) {
             const w = 40 * scale; const h = 80 * scale;
-            // Tronco
-            ctx.fillStyle = '#4b3621'; 
-            ctx.fillRect(x - w*0.2, y + h*0.8, w*0.4, h*0.2);
-            // Folhas (Triângulo estilo pinheiro)
-            ctx.fillStyle = '#0f520f';
-            ctx.beginPath();
-            ctx.moveTo(x, y); // Topo
-            ctx.lineTo(x + w/2, y + h*0.8); // Base Dir
-            ctx.lineTo(x - w/2, y + h*0.8); // Base Esq
-            ctx.fill();
+            ctx.fillStyle = '#4b3621'; ctx.fillRect(x - w*0.2, y + h*0.8, w*0.4, h*0.2);
+            ctx.fillStyle = '#0f520f'; ctx.beginPath();
+            ctx.moveTo(x, y); ctx.lineTo(x + w/2, y + h*0.8); ctx.lineTo(x - w/2, y + h*0.8); ctx.fill();
         }
 
         function desenharPedra(ctx, x, y, scale) {
             const w = 30 * scale; const h = 20 * scale;
-            ctx.fillStyle = '#555';
-            ctx.beginPath();
-            ctx.arc(x, y + h/2, w/2, 0, Math.PI * 2); // Círculo base
-            ctx.fill();
-            ctx.fillStyle = '#777'; // Detalhe de luz
-            ctx.beginPath();
-            ctx.arc(x - w*0.1, y + h*0.4, w*0.3, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.fillStyle = '#555'; ctx.beginPath(); ctx.arc(x, y + h/2, w/2, 0, Math.PI * 2); ctx.fill();
         }
 
-        // --- FUNÇÕES AUXILIARES DE GEOMETRIA ---
-        function getYPorProgresso(p) {
-            const h = canvas.height / 2; const pistaH = canvas.height / 2;
-            return h + (pistaH * (p * p)); 
-        }
-
-        function getLarguraPistaNoY(y) {
-            const h = canvas.height / 2;
-            const progressoLinear = (y - h) / h;
-            return LARGURA_PISTA_TOPO + (LARGURA_PISTA_BASE - LARGURA_PISTA_TOPO) * progressoLinear;
-        }
-
-        function getXNaPista(faixa, y) {
-            const larguraAtual = getLarguraPistaNoY(y);
-            const centro = canvas.width / 2;
-            const indiceFaixa = faixa - 1; 
-            const larguraFaixa = larguraAtual / 3;
-            return centro + (indiceFaixa * larguraFaixa);
-        }
-
-        // --- DESENHO BÁSICO ---
+        // --- CENÁRIO ---
         function desenharFundo() {
-            const h = canvas.height / 2;
+            const h = getHorizonteY();
             ctx.fillStyle = '#192a56'; ctx.fillRect(0, 0, canvas.width, h); // Céu
-            ctx.fillStyle = '#273c75'; ctx.fillRect(0, h, canvas.width, h); // Grama
+            ctx.fillStyle = '#273c75'; ctx.fillRect(0, h, canvas.width, canvas.height - h); // Grama
         }
 
         function desenharEstrada(velocidadeProgresso) {
-            const h = canvas.height / 2; const centro = canvas.width / 2;
+            const h = getHorizonteY(); const centro = canvas.width / 2;
             ctx.fillStyle = '#7f8fa6'; 
             ctx.beginPath();
             ctx.moveTo(centro - LARGURA_PISTA_TOPO/2, h); 
@@ -173,9 +215,9 @@
             ctx.lineTo(centro - LARGURA_PISTA_BASE/2, canvas.height); 
             ctx.fill();
 
-            // Faixas Animadas
             offsetPista += velocidadeProgresso * 3000; 
             if (offsetPista > 100) offsetPista = 0;
+            
             ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 4;
             ctx.setLineDash([50, 50]); ctx.lineDashOffset = -offsetPista;
             ctx.beginPath();
@@ -184,61 +226,38 @@
             ctx.stroke(); ctx.setLineDash([]); 
         }
 
+        // --- OBJETOS E JOGADOR ---
         function desenharJogador() {
+            // Jogador fica a 120px do fundo da tela (independente do horizonte)
             jogador.y = canvas.height - 120; 
             jogador.x = getXNaPista(jogador.faixa, jogador.y) - (60 * ESCALA_JOGADOR / 2);
             desenharSpriteCarro(ctx, jogador.x, jogador.y, ESCALA_JOGADOR, jogador.cor);
         }
 
-        // --- LÓGICA DE JOGO ---
-        function atualizarNivel() {
-            tempoDecorrido += 1/60;
-            if (tempoDecorrido - ultimoTempoNivel >= 20) {
-                ultimoTempoNivel = tempoDecorrido;
-                if (tempoTotalPista > 1.0) {
-                    tempoTotalPista -= 0.5;
-                    const tempoEtapa = tempoTotalPista / 6;
-                    document.getElementById('nivel-info').innerText = "TURBO!";
-                    setTimeout(() => { document.getElementById('nivel-info').innerText = `Etapa: ${tempoEtapa.toFixed(2)}s`; }, 2000);
-                }
-            }
-        }
-
-        // --- NOVO: GERENCIADOR DE PAISAGEM LATERAL ---
         function gerenciarCenarioLateral(progressoPorFrame) {
-            // Spawn aleatório de árvores e pedras
-            if (Math.random() < 0.05) { // 5% de chance por frame
+            if (Math.random() < 0.05) { 
                 cenarioObjetos.push({
-                    tipo: Math.random() > 0.7 ? 'pedra' : 'arvore', // Mais árvores que pedras
-                    lado: Math.random() > 0.5 ? 1 : -1, // 1 Direita, -1 Esquerda
+                    tipo: Math.random() > 0.7 ? 'pedra' : 'arvore',
+                    lado: Math.random() > 0.5 ? 1 : -1,
                     progresso: 0,
-                    offsetAleatorio: Math.random() * 50 // Variação para não ficar em fila indiana
+                    offsetAleatorio: Math.random() * 50 
                 });
             }
-
-            const h = canvas.height / 2; const centro = canvas.width / 2;
-
+            const centro = canvas.width / 2;
             for (let i = cenarioObjetos.length - 1; i >= 0; i--) {
                 let obj = cenarioObjetos[i];
-                // Usa A MESMA velocidade da pista
                 obj.progresso += progressoPorFrame; 
-                
-                // Calcula posição Y usando a MESMA curva dos carros
                 const y = getYPorProgresso(obj.progresso);
-                
-                // Calcula escala
                 let scale = ESCALA_HORIZONTE + (ESCALA_JOGADOR * 1.5 - ESCALA_HORIZONTE) * obj.progresso;
                 if (scale < 0) scale = 0;
-
-                // Calcula X: Tem que ser FORA da pista
+                
                 const larguraPistaAqui = getLarguraPistaNoY(y);
                 const distanciaDoCentro = (larguraPistaAqui / 2) + (40 * scale) + obj.offsetAleatorio;
                 const x = centro + (distanciaDoCentro * obj.lado);
 
-                if (obj.tipo === 'arvore') desenharArvore(ctx, x, y, scale * 2); // Árvores maiores
+                if (obj.tipo === 'arvore') desenharArvore(ctx, x, y, scale * 2);
                 else desenharPedra(ctx, x, y, scale * 1.5);
 
-                // Remove se saiu da tela
                 if (obj.progresso > 1.1) cenarioObjetos.splice(i, 1);
             }
         }
@@ -272,6 +291,19 @@
             }
         }
 
+        function atualizarNivel() {
+            tempoDecorrido += 1/60;
+            if (tempoDecorrido - ultimoTempoNivel >= 20) {
+                ultimoTempoNivel = tempoDecorrido;
+                if (tempoTotalPista > 1.0) {
+                    tempoTotalPista -= 0.5;
+                    const tempoEtapa = tempoTotalPista / 6;
+                    document.getElementById('nivel-info').innerText = "TURBO!";
+                    setTimeout(() => { document.getElementById('nivel-info').innerText = `Etapa: ${tempoEtapa.toFixed(2)}s`; }, 2000);
+                }
+            }
+        }
+
         function loop() {
             if (!jogoRodando) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -279,11 +311,8 @@
             atualizarNivel();
             const velocidadeAtual = 1.0 / (tempoTotalPista * 60);
             
-            desenharFundo(); // Desenha Céu e Grama
-            
-            // NOVO: Desenha a paisagem ANTES da pista (para ficar atrás)
+            desenharFundo();
             gerenciarCenarioLateral(velocidadeAtual);
-            
             desenharEstrada(velocidadeAtual);
             
             pontuacao++;
@@ -300,6 +329,12 @@
             jogoRodando = true;
             tempoDecorrido = 0; ultimoTempoNivel = 0; tempoTotalPista = 3.0; 
             pontuacao = 0; obstaculos = []; cenarioObjetos = [];
+            
+            // Força tela cheia no Android
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch((e)=>{console.log(e)});
+            }
+            
             loop();
         }
 
