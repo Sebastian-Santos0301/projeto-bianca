@@ -3,51 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JOGO BIANCA - V2</title>
+    <title>TURBO BIANCA - V3</title>
     <style>
         body { margin: 0; overflow: hidden; background: #222; font-family: 'Arial', sans-serif; touch-action: none; }
         #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; background: #000; }
         canvas { display: block; max-width: 100%; max-height: 100%; }
         
-        #ui-layer { position: absolute; top: 20px; left: 20px; color: white; z-index: 5; font-size: 20px; text-shadow: 2px 2px 0 #000; font-weight: bold;}
+        #ui-layer { position: absolute; top: 20px; left: 20px; color: white; z-index: 5; font-size: 18px; text-shadow: 2px 2px 0 #000; font-weight: bold;}
         
         #start-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); display: flex; flex-direction: column;
+            background: rgba(0,0,0,0.9); display: flex; flex-direction: column;
             align-items: center; justify-content: center; color: white; z-index: 10;
         }
+        h1 { margin: 0 0 10px 0; font-size: 40px; font-style: italic; color: #ffeb3b; }
         button { 
-            padding: 15px 50px; font-size: 24px; font-weight: bold; text-transform: uppercase;
+            padding: 20px 60px; font-size: 24px; font-weight: bold; text-transform: uppercase;
             background: #e84118; color: white; border: none; border-radius: 5px; 
-            margin-top: 20px; cursor: pointer; box-shadow: 0 4px 0 #c23616;
+            margin-top: 30px; cursor: pointer; box-shadow: 0 5px 0 #c23616;
         }
         button:active { transform: translateY(4px); box-shadow: none; }
         
         .mobile-controls {
             position: absolute; bottom: 20px; width: 100%; display: flex; 
-            justify-content: space-between; padding: 0 20px; box-sizing: border-box; 
+            justify-content: space-between; padding: 0 30px; box-sizing: border-box; 
             pointer-events: none; z-index: 20;
         }
         .btn-control {
-            width: 90px; height: 90px; background: rgba(255,255,255,0.1); 
-            border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); 
+            width: 90px; height: 90px; background: rgba(255,255,255,0.15); 
+            border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); 
             pointer-events: auto; display: flex; justify-content: center; 
             align-items: center; font-size: 40px; color: white; user-select: none;
         }
-        .btn-control:active { background: rgba(255,255,255,0.3); }
+        .btn-control:active { background: rgba(255,255,255,0.4); }
     </style>
 </head>
 <body>
     <div id="start-screen">
-        <h1 style="font-size: 50px; margin-bottom: 0; font-style: italic;">TURBO BIANCA</h1>
-        <p>Desvie do trânsito!</p>
-        <button onclick="iniciarJogo()">LIGAR MOTOR</button>
+        <h1>TURBO BIANCA</h1>
+        <p>Estágio 1: Velocidade Normal</p>
+        <button onclick="iniciarJogo()">START</button>
     </div>
 
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
         <div id="ui-layer">
-            SCORE: <span id="score">0</span>
+            SCORE: <span id="score">0</span> <br>
+            <span id="nivel-info" style="font-size: 14px; color: #f1c40f;">Nível 1</span>
         </div>
         <div class="mobile-controls" id="mobileControls" style="display:none;">
             <div class="btn-control" id="btnLeft">◀</div>
@@ -71,144 +73,172 @@
         // --- CONFIGURAÇÕES DO JOGO ---
         let jogoRodando = false;
         let frameId;
-        let velocidade = 0;
-        let distancia = 0;
-        // Ajuste de velocidade (Mais lento e suave)
-        const VELOCIDADE_INICIAL = 2; 
-        const ACELERACAO = 0.001; 
-        const VELOCIDADE_MAX = 12;
+        let pontuacao = 0;
+        
+        // Configurações de Tempo e Nível
+        let tempoDecorrido = 0; // Segundos de jogo
+        let ultimoTempoNivel = 0;
+        let tempoPorEtapa = 0.5; // Começa em 0.5s
+        const TEMPO_MINIMO_ETAPA = 0.1;
+        const INTERVALO_MUDANCA_NIVEL = 20; // Segundos
+        
+        // Dimensões
+        // Definimos escalas fixas para garantir que o obstáculo fique IGUAL ao jogador
+        const ESCALA_JOGADOR = 1.5; 
+        const ESCALA_HORIZONTE = 0.1;
 
         let jogador = { faixa: 1, x: 0, y: 0, cor: '#e84118', w: 60, h: 50 };
         let obstaculos = [];
 
-        // --- ARTE: DESENHAR CARRO (Função Artística) ---
+        // --- ARTE ---
         function desenharSpriteCarro(ctx, x, y, scale, corPrincipal) {
-            const w = 60 * scale; // Largura base
-            const h = 50 * scale; // Altura base
+            const w = 60 * scale; 
+            const h = 50 * scale; 
 
-            // 1. Pneus (Pretos nas laterais)
+            // Pneus
             ctx.fillStyle = '#111';
-            ctx.fillRect(x - w*0.1, y + h*0.6, w*0.2, h*0.4); // Esq
-            ctx.fillRect(x + w*0.9, y + h*0.6, w*0.2, h*0.4); // Dir
+            ctx.fillRect(x - w*0.1, y + h*0.6, w*0.2, h*0.4);
+            ctx.fillRect(x + w*0.9, y + h*0.6, w*0.2, h*0.4);
 
-            // 2. Chassi (Corpo do carro)
+            // Corpo
             ctx.fillStyle = corPrincipal;
-            // Parte inferior larga
             ctx.fillRect(x, y + h*0.4, w, h*0.6); 
-            // Parte superior (Teto) mais estreita
             ctx.fillRect(x + w*0.15, y, w*0.7, h*0.4);
 
-            // 3. Vidro Traseiro
-            ctx.fillStyle = '#87ceeb'; // Azul claro reflexo
+            // Vidro
+            ctx.fillStyle = '#87ceeb';
             ctx.fillRect(x + w*0.2, y + h*0.05, w*0.6, h*0.3);
 
-            // 4. Lanternas Traseiras (Vermelhas)
+            // Lanternas
             ctx.fillStyle = '#c0392b';
-            ctx.fillRect(x + w*0.05, y + h*0.5, w*0.2, h*0.15); // Esq
-            ctx.fillRect(x + w*0.75, y + h*0.5, w*0.2, h*0.15); // Dir
-            
-            // 5. Placa (Amarela)
-            ctx.fillStyle = '#f1c40f';
-            ctx.fillRect(x + w*0.35, y + h*0.6, w*0.3, h*0.15);
+            ctx.fillRect(x + w*0.05, y + h*0.5, w*0.2, h*0.15); 
+            ctx.fillRect(x + w*0.75, y + h*0.5, w*0.2, h*0.15); 
         }
 
         function desenharCenario() {
-            // Céu Noturno
-            ctx.fillStyle = '#192a56'; 
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
+            ctx.fillStyle = '#192a56'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             const h = canvas.height / 2;
-            
-            // Grama
-            ctx.fillStyle = '#273c75'; 
-            ctx.fillRect(0, h, canvas.width, h);
+            ctx.fillStyle = '#273c75'; ctx.fillRect(0, h, canvas.width, h);
 
-            // Estrada
             ctx.fillStyle = '#7f8fa6'; 
             ctx.beginPath();
-            // AQUI: Aumentei o horizonte (width/2 - 80) para facilitar a visão
-            ctx.moveTo(canvas.width/2 - 100, h); 
-            ctx.lineTo(canvas.width/2 + 100, h);
+            // Horizonte bem largo
+            ctx.moveTo(canvas.width/2 - 120, h); 
+            ctx.lineTo(canvas.width/2 + 120, h);
             ctx.lineTo(canvas.width, canvas.height);
             ctx.lineTo(0, canvas.height);
             ctx.fill();
 
-            // Faixas Divisórias
+            // Faixas
             ctx.strokeStyle = 'rgba(255,255,255,0.4)';
             ctx.lineWidth = 4;
-            ctx.setLineDash([20, 20]); // Tracejado
+            ctx.setLineDash([30, 30]);
             ctx.beginPath();
-            
-            // Faixa Esq
-            ctx.moveTo(canvas.width/2 - 30, h);
-            ctx.lineTo(canvas.width/3, canvas.height);
-            
-            // Faixa Dir
-            ctx.moveTo(canvas.width/2 + 30, h);
-            ctx.lineTo(canvas.width*2/3, canvas.height);
-            
-            ctx.stroke();
-            ctx.setLineDash([]); // Limpa tracejado
+            ctx.moveTo(canvas.width/2 - 40, h); ctx.lineTo(canvas.width/3, canvas.height);
+            ctx.moveTo(canvas.width/2 + 40, h); ctx.lineTo(canvas.width*2/3, canvas.height);
+            ctx.stroke(); ctx.setLineDash([]);
         }
 
         function desenharJogador() {
             const centroTela = canvas.width / 2;
             const larguraBase = canvas.width; 
-            // Cálculo de posição na pista
             let offset = (jogador.faixa - 1) * (larguraBase * 0.28);
             
             jogador.x = centroTela + offset - (jogador.w/2);
-            jogador.y = canvas.height - 120; // Mais para cima para ver o chão
+            jogador.y = canvas.height - 130; 
 
-            // Desenha usando a função artística (Escala 1.5 para ficar visível)
-            desenharSpriteCarro(ctx, jogador.x, jogador.y, 1.5, jogador.cor);
+            desenharSpriteCarro(ctx, jogador.x, jogador.y, ESCALA_JOGADOR, jogador.cor);
         }
 
-        function gerenciarObstaculos() {
-            // Gerar inimigos (Chance reduzida para não virar bagunça)
-            if (Math.random() < 0.015) {
-                const coresInimigas = ['#4cd137', '#0097e6', '#8c7ae6', '#e1b12c'];
+        function atualizarLogicaVelocidade() {
+            // Conta o tempo (assumindo 60fps, cada frame é aprox 0.016s)
+            tempoDecorrido += 1/60;
+
+            // Verifica mudança de nível a cada 20s
+            if (tempoDecorrido - ultimoTempoNivel >= INTERVALO_MUDANCA_NIVEL) {
+                ultimoTempoNivel = tempoDecorrido;
+                if (tempoPorEtapa > TEMPO_MINIMO_ETAPA) {
+                    tempoPorEtapa -= 0.2;
+                    // Correção para não ficar negativo ou zero
+                    if (tempoPorEtapa < TEMPO_MINIMO_ETAPA) tempoPorEtapa = TEMPO_MINIMO_ETAPA;
+                    
+                    // Mostra na tela
+                    document.getElementById('nivel-info').innerText = "VELOCIDADE AUMENTOU!";
+                    setTimeout(() => document.getElementById('nivel-info').innerText = `Nível ${(0.5 - tempoPorEtapa)*10 + 1}`, 2000);
+                }
+            }
+
+            // CÁLCULO FÍSICO DA VELOCIDADE
+            // 1. Qual a distância do Horizonte até o Jogador?
+            const horizonteY = canvas.height / 2;
+            const jogadorY = canvas.height - 130;
+            const comprimentoPista = jogadorY - horizonteY;
+
+            // 2. Quanto mede UMA etapa (1/6 da pista)?
+            const tamanhoEtapa = comprimentoPista / 6;
+
+            // 3. Velocidade necessária (Pixels por Frame)
+            // Velocidade = Distancia / Tempo.
+            // Queremos percorrer 'tamanhoEtapa' em 'tempoPorEtapa' segundos.
+            const pixelsPorSegundo = tamanhoEtapa / tempoPorEtapa;
+            const pixelsPorFrame = pixelsPorSegundo / 60; // 60 FPS
+
+            return pixelsPorFrame;
+        }
+
+        function gerenciarObstaculos(velocidadeAtual) {
+            // Spawning: Ajusta frequência baseada na velocidade
+            // Quanto mais rápido, spawnamos menos frequentemente para não ficar impossível,
+            // mas como é "etapa", tentamos manter o ritmo.
+            let chanceSpawn = 0.015;
+            if (tempoPorEtapa <= 0.3) chanceSpawn = 0.025;
+            if (tempoPorEtapa <= 0.1) chanceSpawn = 0.04;
+
+            if (Math.random() < chanceSpawn) {
+                const cores = ['#4cd137', '#0097e6', '#8c7ae6', '#fbc531'];
                 obstaculos.push({
                     faixa: Math.floor(Math.random() * 3),
                     y: canvas.height / 2, // Nasce no horizonte
-                    scale: 0.1, // Começa pequenininho
-                    cor: coresInimigas[Math.floor(Math.random() * coresInimigas.length)]
+                    cor: cores[Math.floor(Math.random() * cores.length)]
                 });
             }
+
+            const horizonteY = canvas.height / 2;
+            const jogadorY = canvas.height - 130;
+            const comprimentoTotal = jogadorY - horizonteY;
 
             for (let i = obstaculos.length - 1; i >= 0; i--) {
                 let obs = obstaculos[i];
                 
-                // Movimento suave baseado na velocidade
-                obs.y += (velocidade * 1.2) + (obs.scale * 5);
-                obs.scale += 0.012; // Cresce conforme aproxima
+                // Movimento calculado
+                obs.y += velocidadeAtual;
 
-                // Perspectiva
+                // --- CÁLCULO DE ESCALA PERFEITA ---
+                // Calcula a porcentagem do progresso (0 = horizonte, 1 = linha do jogador)
+                let progresso = (obs.y - horizonteY) / comprimentoTotal;
+                
+                // Se o progresso for < 0 (antes do horizonte?) trata como 0
+                if (progresso < 0) progresso = 0;
+                
+                // Interpolação Linear: Tamanho = Inicio + (Diferença * Progresso)
+                // Isso garante que quando progresso for 1 (no jogador), a escala será EXATAMENTE ESCALA_JOGADOR
+                obs.scale = ESCALA_HORIZONTE + (ESCALA_JOGADOR - ESCALA_HORIZONTE) * progresso;
+
+                // Desenho
                 const centroTela = canvas.width / 2;
-                const progressoY = (obs.y - canvas.height/2) / (canvas.height/2);
-                
-                // Abertura da pista (ajustada para combinar com o horizonte maior)
-                const spread = canvas.width * 0.9 * progressoY; 
+                const spread = canvas.width * 0.9 * progresso; 
                 const offset = (obs.faixa - 1) * (spread / 2);
-                
-                // Calcula X centralizado no objeto
-                // A escala base é 60px de largura.
-                const larguraAtual = 60 * obs.scale * 4; 
-                const x = centroTela + offset - (larguraAtual/2);
+                const w = 60 * obs.scale; 
+                const x = centroTela + offset - (w/2);
 
                 if (obs.y > canvas.height/2) {
-                    // Desenha inimigo usando a mesma arte, mas com escala dinâmica
-                    desenharSpriteCarro(ctx, x, obs.y, obs.scale * 4, obs.cor);
+                    desenharSpriteCarro(ctx, x, obs.y, obs.scale, obs.cor);
                 }
 
-                // Colisão (Hitbox ajustada)
-                // O jogador está fixo em Y = canvas.height - 120
-                // Altura do jogador aprox 75px
-                const jogadorY = canvas.height - 120;
-                const jogadorH = 75;
-
-                // Se o inimigo chegou na linha do jogador
-                if (obs.y + (30*obs.scale) > jogadorY && obs.y < jogadorY + jogadorH) {
+                // Colisão
+                // A colisão ocorre se o progresso for próximo de 1 (onde está o jogador)
+                // Zona de perigo: Progresso > 0.9 e < 1.1
+                if (progresso > 0.90 && progresso < 1.1) {
                     if (obs.faixa === jogador.faixa) {
                         gameOver();
                     }
@@ -224,15 +254,13 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             desenharCenario();
             
-            // Aceleração progressiva
-            if (velocidade < VELOCIDADE_MAX) velocidade += ACELERACAO;
+            // Calcula velocidade baseada no nível atual (etapas)
+            let velocidadePixels = atualizarLogicaVelocidade();
             
-            distancia += Math.round(velocidade * 10); // Pontuação sobe mais rápido visualmente
-            document.getElementById('score').innerText = distancia;
+            pontuacao += 1;
+            document.getElementById('score').innerText = Math.floor(pontuacao/10);
             
-            if(distancia % 100 === 0) socket.emit('atualizarScore', distancia);
-
-            gerenciarObstaculos();
+            gerenciarObstaculos(velocidadePixels);
             desenharJogador();
             frameId = requestAnimationFrame(loop);
         }
@@ -241,8 +269,10 @@
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('mobileControls').style.display = 'flex';
             jogoRodando = true;
-            velocidade = VELOCIDADE_INICIAL; // Começa devagar
-            distancia = 0;
+            tempoDecorrido = 0;
+            ultimoTempoNivel = 0;
+            tempoPorEtapa = 0.5; // Reset tempo
+            pontuacao = 0;
             obstaculos = [];
             loop();
         }
@@ -250,7 +280,7 @@
         function gameOver() {
             jogoRodando = false;
             cancelAnimationFrame(frameId);
-            alert('BATIDA! Pontuação: ' + distancia);
+            alert(`BATIDA!\nTempo resistido: ${Math.floor(tempoDecorrido)}s\nNível alcançado: ${tempoPorEtapa.toFixed(1)}s/etapa`);
             location.reload();
         }
 
@@ -265,18 +295,12 @@
             if (e.key === 'ArrowLeft' || e.key === 'a') mover(-1);
             if (e.key === 'ArrowRight' || e.key === 'd') mover(1);
         });
-
-        // Touch otimizado (Impede zoom duplo toque)
+        
         const btnLeft = document.getElementById('btnLeft');
         const btnRight = document.getElementById('btnRight');
-        
         btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); mover(-1); });
         btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); mover(1); });
 
-        socket.on('setupJogador', (dados) => { 
-            // Mantém a cor vermelha padrão ou usa a do servidor se quiser
-             // jogador.cor = dados.cor; 
-        });
     </script>
 </body>
 </html>
