@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TURBO BIANCA - V15 HD FIXED</title>
+    <title>TURBO BIANCA - V16 WIDE BODY</title>
     <style>
         html, body { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
@@ -13,7 +13,6 @@
         #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: #111;}
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; z-index: 1; }
         
-        /* HUD Moderno */
         #ui-layer { 
             position: absolute; top: 20px; left: 20px; 
             color: white; z-index: 10; 
@@ -53,7 +52,7 @@
         </div>
         <div id="start-screen">
             <h1>TOP RACER</h1>
-            <p>V15: HD FIXED</p>
+            <p>V16: WIDE BODY</p>
             <button onclick="iniciarJogo()">START</button>
         </div>
     </div>
@@ -89,7 +88,7 @@
         const ESCALA_HORIZONTE = 0.08; 
 
         let jogador = { 
-            faixa: 1, x: 0, y: 0, cor: '#d63031', // Vermelho Ferrari
+            faixa: 1, x: 0, y: 0, cor: '#d63031', // Vermelho
             tiltAtual: 0, tiltAlvo: 0 
         };
         let obstaculos = [];
@@ -98,29 +97,11 @@
 
         // --- MATEMÁTICA ---
         function getHorizonteY() { return canvas.height * PCT_CEU; }
-        
-        function getYPorProgresso(p) { 
-            const h = getHorizonteY(); 
-            const alturaPista = canvas.height - h; 
-            return h + (alturaPista * Math.pow(p, 3)); 
-        }
+        function getYPorProgresso(p) { const h = getHorizonteY(); const alturaPista = canvas.height - h; return h + (alturaPista * Math.pow(p, 3)); }
+        function getLarguraPistaNoY(y) { const h = getHorizonteY(); const alturaPista = canvas.height - h; if (y < h) return LARGURA_PISTA_TOPO; const progressoLinear = (y - h) / alturaPista; return LARGURA_PISTA_TOPO + (LARGURA_PISTA_BASE - LARGURA_PISTA_TOPO) * progressoLinear; }
+        function getXNaPista(faixa, y) { const larguraAtual = getLarguraPistaNoY(y); const centro = canvas.width / 2; const indiceFaixa = faixa - 1; return centro + (indiceFaixa * (larguraAtual / 3)); }
 
-        function getLarguraPistaNoY(y) { 
-            const h = getHorizonteY(); 
-            const alturaPista = canvas.height - h;
-            if (y < h) return LARGURA_PISTA_TOPO; 
-            const progressoLinear = (y - h) / alturaPista; 
-            return LARGURA_PISTA_TOPO + (LARGURA_PISTA_BASE - LARGURA_PISTA_TOPO) * progressoLinear; 
-        }
-
-        function getXNaPista(faixa, y) { 
-            const larguraAtual = getLarguraPistaNoY(y); 
-            const centro = canvas.width / 2; 
-            const indiceFaixa = faixa - 1; 
-            return centro + (indiceFaixa * (larguraAtual / 3)); 
-        }
-
-        // --- ARTE: CARRO HD ---
+        // --- ARTE: CARRO MODIFICADO (V16) ---
         function desenharFerrari(ctx, x, y, scale, corPrincipal, isObstacle) {
             const w = 60 * scale; 
             const h = 35 * scale; 
@@ -128,18 +109,18 @@
             ctx.save();
             ctx.translate(x, y);
 
-            // Sombra
-            ctx.fillStyle = 'rgba(0,0,0,0.6)';
-            ctx.beginPath();
-            ctx.ellipse(0, h*0.8, w*0.55, h*0.15, 0, 0, Math.PI*2);
-            ctx.fill();
+            // 1. SEM SOMBRA EMBAIXO (Removido conforme pedido)
 
-            // Pneus
+            // 2. PNEUS LARGOS (Saindo para fora do chassi)
             ctx.fillStyle = '#151515';
-            ctx.fillRect(-w/2 + w*0.05, h*0.4, w*0.25, h*0.5); // Esq
-            ctx.fillRect(w/2 - w*0.30, h*0.4, w*0.25, h*0.5); // Dir
+            const pneuW = w * 0.3; // Pneu mais largo
+            const pneuH = h * 0.55;
+            // Pneu Esq (Posição X negativa maior que a largura do carro)
+            ctx.fillRect(-w/2 - pneuW*0.4, h*0.35, pneuW, pneuH); 
+            // Pneu Dir (Posição X positiva maior)
+            ctx.fillRect(w/2 - pneuW*0.6, h*0.35, pneuW, pneuH); 
 
-            // Chassi
+            // 3. Chassi Principal
             ctx.fillStyle = corPrincipal;
             ctx.beginPath();
             ctx.moveTo(-w*0.5, h*0.7); 
@@ -167,21 +148,33 @@
 
             // Painel Traseiro
             ctx.fillStyle = '#111';
-            ctx.fillRect(-w*0.45, h*0.3, w*0.9, h*0.3);
+            ctx.fillRect(-w*0.45, h*0.3, w*0.9, h*0.35);
 
-            // Luzes
-            const luzY = h*0.45; const raioLuz = w*0.06;
-            ctx.fillStyle = '#c0392b'; 
-            ctx.beginPath(); ctx.arc(-w*0.30, luzY, raioLuz, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(-w*0.15, luzY, raioLuz, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(w*0.15, luzY, raioLuz, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(w*0.30, luzY, raioLuz, 0, Math.PI*2); ctx.fill();
+            // 4. LANTERNAS QUADRADAS E LARGAS (Apenas uma de cada lado)
+            const luzY = h*0.35; 
+            const luzH = h*0.25;
+            const luzW = w*0.35; // Bem larga
 
-            ctx.fillStyle = '#ff4d4d'; 
-            ctx.beginPath(); ctx.arc(-w*0.30, luzY, raioLuz*0.6, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(-w*0.15, luzY, raioLuz*0.6, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(w*0.15, luzY, raioLuz*0.6, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(w*0.30, luzY, raioLuz*0.6, 0, Math.PI*2); ctx.fill();
+            // Base da lanterna (Vermelho Escuro)
+            ctx.fillStyle = '#900'; 
+            // Esq
+            ctx.fillRect(-w*0.45, luzY, luzW, luzH);
+            // Dir
+            ctx.fillRect(w*0.10, luzY, luzW, luzH);
+
+            // Brilho da lanterna (Vermelho Vivo no centro)
+            ctx.fillStyle = '#ff0000'; 
+            const margem = w*0.04;
+            // Esq
+            ctx.fillRect(-w*0.45 + margem, luzY + margem, luzW - margem*2, luzH - margem*2);
+            // Dir
+            ctx.fillRect(w*0.10 + margem, luzY + margem, luzW - margem*2, luzH - margem*2);
+
+            if(!isObstacle) {
+                // Luz de Ré (Pequeno quadrado branco no centro, opcional, estilo Top Gear 2)
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(-w*0.05, h*0.4, w*0.1, h*0.15);
+            }
 
             // Aerofólio
             ctx.fillStyle = corPrincipal;
@@ -232,7 +225,6 @@
             let grd = ctx.createLinearGradient(0, 0, 0, h);
             grd.addColorStop(0, "#0984e3"); grd.addColorStop(1, "#74b9ff");
             ctx.fillStyle = grd; ctx.fillRect(0, 0, canvas.width, h);
-            
             ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'; 
             ctx.beginPath(); ctx.arc(canvas.width*0.2, h*0.8, 50, 0, Math.PI*2); ctx.fill();
             ctx.beginPath(); ctx.arc(canvas.width*0.8, h*0.6, 80, 0, Math.PI*2); ctx.fill();
@@ -241,14 +233,10 @@
 
         function desenharEstrada(velocidadeProgresso) {
             const h = getHorizonteY(); const centro = canvas.width / 2;
-            
-            ctx.fillStyle = '#576574'; 
-            ctx.beginPath();
-            ctx.moveTo(centro - LARGURA_PISTA_TOPO/2, h); ctx.lineTo(centro + LARGURA_PISTA_TOPO/2, h); 
-            ctx.lineTo(centro + LARGURA_PISTA_BASE/2, canvas.height); ctx.lineTo(centro - LARGURA_PISTA_BASE/2, canvas.height); ctx.fill();
+            ctx.fillStyle = '#576574'; ctx.beginPath();
+            ctx.moveTo(centro - LARGURA_PISTA_TOPO/2, h); ctx.lineTo(centro + LARGURA_PISTA_TOPO/2, h); ctx.lineTo(centro + LARGURA_PISTA_BASE/2, canvas.height); ctx.lineTo(centro - LARGURA_PISTA_BASE/2, canvas.height); ctx.fill();
 
-            offsetPista += velocidadeProgresso * 4000; 
-            if (offsetPista > 100) offsetPista = 0;
+            offsetPista += velocidadeProgresso * 4000; if (offsetPista > 100) offsetPista = 0;
             
             let numFaixas = 12; 
             for(let i=0; i<numFaixas; i++) {
@@ -262,17 +250,14 @@
                 ctx.fillStyle = (i % 2 === 0) ? '#e74c3c' : '#ecf0f1';
                 ctx.beginPath(); ctx.moveTo(canvas.width/2 - w1/2, y1); ctx.lineTo(canvas.width/2 - w2/2, y2);
                 ctx.lineTo(canvas.width/2 - w2/2 - w2*0.15, y2); ctx.lineTo(canvas.width/2 - w1/2 - w1*0.15, y1); ctx.fill();
-
                 ctx.beginPath(); ctx.moveTo(canvas.width/2 + w1/2, y1); ctx.lineTo(canvas.width/2 + w2/2, y2);
                 ctx.lineTo(canvas.width/2 + w2/2 + w2*0.15, y2); ctx.lineTo(canvas.width/2 + w1/2 + w1*0.15, y1); ctx.fill();
             }
 
             ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 4;
             ctx.setLineDash([40, 60]); ctx.lineDashOffset = -offsetPista * 4; 
-            
             const xEsqTopo = centro - LARGURA_PISTA_TOPO/6; const xEsqBase = centro - LARGURA_PISTA_BASE/6;
             ctx.beginPath(); ctx.moveTo(xEsqTopo, h); ctx.lineTo(xEsqBase, canvas.height); ctx.stroke();
-
             const xDirTopo = centro + LARGURA_PISTA_TOPO/6; const xDirBase = centro + LARGURA_PISTA_BASE/6;
             ctx.beginPath(); ctx.moveTo(xDirTopo, h); ctx.lineTo(xDirBase, canvas.height); ctx.stroke();
             ctx.setLineDash([]); 
@@ -283,7 +268,6 @@
             jogador.x = getXNaPista(jogador.faixa, jogador.y);
             jogador.tiltAtual += (jogador.tiltAlvo - jogador.tiltAtual) * 0.15;
             if(frameId % 3 === 0) gerarFumaca(jogador.x, jogador.y);
-            
             ctx.save();
             ctx.translate(jogador.x, jogador.y + 40); 
             ctx.rotate(jogador.tiltAtual * Math.PI / 180);
@@ -298,20 +282,14 @@
             const centro = canvas.width / 2;
             for (let i = cenarioObjetos.length - 1; i >= 0; i--) {
                 let obj = cenarioObjetos[i];
-                // AQUI ESTAVA O ERRO! CORRIGIDO:
                 obj.progresso += velocidadeProgresso; 
-                
                 const y = getYPorProgresso(obj.progresso);
                 let scale = ESCALA_HORIZONTE + (ESCALA_JOGADOR * 1.5 - ESCALA_HORIZONTE) * Math.pow(obj.progresso, 3);
                 if (scale < 0) scale = 0;
-                
                 const larguraPistaAqui = getLarguraPistaNoY(y);
                 const distanciaDoCentro = (larguraPistaAqui / 2) + (100 * scale) + obj.offsetAleatorio;
                 const x = centro + (distanciaDoCentro * obj.lado);
-                
-                if (obj.tipo === 'arvore') desenharArvore(ctx, x, y, scale * 1.2); 
-                else desenharPedra(ctx, x, y, scale);
-
+                if (obj.tipo === 'arvore') desenharArvore(ctx, x, y, scale * 1.2); else desenharPedra(ctx, x, y, scale);
                 if (obj.progresso > 1.2) cenarioObjetos.splice(i, 1);
             }
         }
@@ -320,23 +298,17 @@
             let podeSpawnar = false;
             if (obstaculos.length === 0) podeSpawnar = true;
             else if (obstaculos[obstaculos.length - 1].progresso > 0.35) podeSpawnar = true; 
-
             if (podeSpawnar && Math.random() < 0.03) {
                 const cores = ['#2980b9', '#f39c12', '#8e44ad', '#27ae60']; 
                 obstaculos.push({ faixa: Math.floor(Math.random() * 3), progresso: 0, cor: cores[Math.floor(Math.random() * cores.length)] });
             }
-
             for (let i = obstaculos.length - 1; i >= 0; i--) {
                 let obs = obstaculos[i];
                 obs.progresso += velocidadeProgresso * 0.8; 
-                
                 obs.y = getYPorProgresso(obs.progresso);
                 let scale = ESCALA_HORIZONTE + (ESCALA_JOGADOR - ESCALA_HORIZONTE) * Math.pow(obs.progresso, 3);
-                
                 const x = getXNaPista(obs.faixa, obs.y);
-
                 if (obs.progresso < 1.1) desenharFerrari(ctx, x, obs.y, scale, obs.cor, true);
-
                 if (obs.progresso > 0.90 && obs.progresso < 0.98) {
                     const distanciaX = Math.abs(x - jogador.x);
                     if (obs.faixa === jogador.faixa && distanciaX < 80) gameOver();
@@ -348,24 +320,19 @@
         function loop() {
             if (!jogoRodando) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
             tempoDecorrido += 1/60;
             if(tempoDecorrido - ultimoTempoNivel > 15 && tempoTotalPista > 1.0) {
                 ultimoTempoNivel = tempoDecorrido;
                 tempoTotalPista -= 0.3;
                 document.getElementById('nivel-info').innerText = "GEAR UP!";
             }
-
             const velocidadeAtual = 1.0 / (tempoTotalPista * 60);
-
             desenharFundo();
             gerenciarCenarioLateral(velocidadeAtual);
             desenharEstrada(velocidadeAtual);
             desenharFumaca();
-            
             pontuacao++; 
             document.getElementById('score').innerText = Math.floor(pontuacao/10).toString().padStart(4, '0');
-            
             gerenciarObstaculos(velocidadeAtual);
             desenharJogador();
             frameId = requestAnimationFrame(loop);
