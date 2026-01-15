@@ -3,420 +3,518 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TOP GEAR - SNES REPLICA</title>
+    <title>TURBO BIANCA - V15 HD REMASTER</title>
     <style>
-        /* CSS para Upscaling sem borrão (Pixel Perfect) */
         html, body { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
-            background: #050510; overflow: hidden; touch-action: none;
+            overflow: hidden; background: #000; font-family: 'Arial', sans-serif; 
+            touch-action: none; 
         }
+        #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: #111;}
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; z-index: 1; }
         
-        #game-container {
-            width: 100vw; 
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #000;
-        }
-
-        canvas { 
-            /* Renderiza na resolução nativa do SNES (256x224) e estica via CSS */
-            width: 100%;
-            height: 100%;
-            image-rendering: -moz-crisp-edges;
-            image-rendering: -webkit-crisp-edges;
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
-            object-fit: contain; /* Mantém a proporção correta da tela */
-            display: block;
-            background: #000;
-        }
-        
-        /* UI Retro */
+        /* HUD Moderno */
         #ui-layer { 
-            position: absolute; top: 10px; left: 10px; 
-            font-family: 'Courier New', monospace; 
-            color: #fff; text-shadow: 2px 2px 0 #000;
-            pointer-events: none;
-            z-index: 10;
+            position: absolute; top: 20px; left: 20px; 
+            color: white; z-index: 10; 
+            background: linear-gradient(90deg, rgba(0,0,0,0.8), rgba(0,0,0,0));
+            padding: 10px 30px; border-left: 5px solid #e84118;
+            font-style: italic;
         }
-        #score { font-size: 24px; color: #f1c40f; font-weight: bold;}
-        #nivel-info { font-size: 14px; color: #ccc; display: block; margin-top: 5px;}
+        #score { font-size: 32px; font-weight: 900; color: #fff; text-shadow: 2px 2px 0 #e84118; }
+        #nivel-info { font-size: 14px; color: #f1c40f; text-transform: uppercase; letter-spacing: 2px; font-weight: bold;}
         
-        /* Tela de Start */
-        #start-screen { 
-            position: absolute; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.85); 
-            display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; 
-            color: white; z-index: 20; 
-        }
-        h1 { 
-            font-family: 'Courier New', monospace; 
-            font-size: 40px; color: #fff; 
-            text-shadow: 4px 4px 0 #c23616; 
-            margin-bottom: 20px; text-align: center;
-            line-height: 1.2;
-        }
-        
-        /* Controles Mobile */
-        .mobile-controls { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 40px; box-sizing: border-box; pointer-events: none; z-index: 15; }
-        .btn-control { width: 80px; height: 80px; background: rgba(255,255,255,0.15); border: 2px solid #fff; border-radius: 50%; pointer-events: auto; }
-        .btn-control:active { background: rgba(255,255,255,0.4); }
-        
+        #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; z-index: 20; }
+        h1 { font-size: 50px; font-style: italic; color: #e84118; text-transform: uppercase; margin-bottom: 0px; text-shadow: 0 0 10px #e84118;}
+        p { color: #aaa; margin-top: 5px; }
+
         button { 
-            font-family: 'Courier New', monospace; padding: 15px 30px; 
-            font-size: 20px; font-weight: bold; background: #c23616; 
-            color: #fff; border: 4px solid #fff; cursor: pointer; 
-            text-transform: uppercase;
+            padding: 20px 80px; font-size: 24px; font-weight: 900; text-transform: uppercase; 
+            background: #fff; color: #e84118; border: none; transform: skewX(-10deg);
+            margin-top: 40px; cursor: pointer; box-shadow: 5px 5px 0 #e84118; transition: all 0.1s;
         }
-        button:hover { background: #e84118; }
+        button:active { transform: skewX(-10deg) translate(2px, 2px); box-shadow: 3px 3px 0 #e84118; }
+        
+        .mobile-controls { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; box-sizing: border-box; pointer-events: none; z-index: 15; }
+        .btn-control { width: 90px; height: 90px; background: rgba(255,255,255,0.1); backdrop-filter: blur(4px); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 30px; color: white; pointer-events: auto; }
+        .btn-control:active { background: rgba(255,255,255,0.3); transform: scale(0.95); }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <canvas id="gameCanvas" width="256" height="224"></canvas>
-        
+        <canvas id="gameCanvas"></canvas>
         <div id="ui-layer">
-            SCORE <span id="score">000000</span><br>
-            <span id="nivel-info">STAGE 1 - PRESS START</span>
+            <span id="score">0000</span> km<br>
+            <span id="nivel-info">GEAR 1</span>
         </div>
-        
         <div class="mobile-controls" id="mobileControls" style="display:none;">
-            <div class="btn-control" id="btnLeft"></div>
-            <div class="btn-control" id="btnRight"></div>
+            <div class="btn-control" id="btnLeft">◀</div>
+            <div class="btn-control" id="btnRight">▶</div>
         </div>
-        
         <div id="start-screen">
-            <h1>TOP RACER<br>REPLICA</h1>
-            <button onclick="iniciarJogo()">START ENGINE</button>
+            <h1>TOP RACER</h1>
+            <p>V15: HD REMASTER</p>
+            <button onclick="iniciarJogo()">START</button>
         </div>
     </div>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script>
         const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d', { alpha: false });
+        const ctx = canvas.getContext('2d');
+        const socket = io();
 
-        // --- CONSTANTES DE RESOLUÇÃO SNES ---
-        const WIDTH = 256;
-        const HEIGHT = 224;
-        const CENTRO_X = WIDTH / 2;
-        const HORIZONTE_Y = HEIGHT * 0.45; // Horizonte levemente mais alto para ver mais pista
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
 
-        // Geometria da Pista
-        const LARGURA_PISTA_TOPO = 4; 
-        const LARGURA_PISTA_BASE = 240; 
+        // --- GEOMETRIA DE PISTA CORRIGIDA ---
+        // Horizonte mais baixo para ver mais pista (45% céu, 55% chão)
+        const PCT_CEU = 0.45; 
+        
+        // CORREÇÃO: Horizonte mais largo para caber os carros
+        const LARGURA_PISTA_TOPO = 60; // Era 20, aumentei para 60 para caber o carro no spawn
+        const LARGURA_PISTA_BASE = window.innerWidth > 1000 ? 1200 : window.innerWidth * 1.5; 
 
-        // --- ESTADO DO JOGO ---
+        // --- ESTADO ---
         let jogoRodando = false;
         let frameId;
         let pontuacao = 0;
         let tempoDecorrido = 0;
         let ultimoTempoNivel = 0;
-        let tempoTotalPista = 2.0; 
+        let tempoTotalPista = 3.0; 
         let offsetPista = 0;
         
+        // Carro grande e imponente
+        const ESCALA_JOGADOR = 2.4; 
+        
+        // Horizonte escala mínima (para o carro não sumir 100%)
+        const ESCALA_HORIZONTE = 0.08; 
+
         let jogador = { 
-            faixa: 1, x: 0, y: 0, 
-            tiltAtual: 0, tiltAlvo: 0, 
-            frameAnimacao: 0 
+            faixa: 1, x: 0, y: 0, cor: '#d63031', // Vermelho Ferrari
+            tiltAtual: 0, tiltAlvo: 0 
         };
         let obstaculos = [];
-        let particulasFumaca = [];
+        let cenarioObjetos = [];
+        let particulasFumaca = []; 
 
-        // --- MATRIZ DO CARRO TOP GEAR (100% FIEL / BOXY SHAPE) ---
-        const SPRITE_CARRO_FINAL = [
-            "......................................................",
-            ".........QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ.........", // Teto Plano e Largo
-            "........QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ........",
-            ".......QQBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBQQ.......", // Vidro Retangular
-            ".......QQBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBQQ.......",
-            "......QQQBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBQQQ......",
-            "......QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ......",
-            ".....DQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQD.....", // Ombros Largos
-            ".....DQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQD.....",
-            ".....DQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQD.....",
-            "....DDQQKRRRRRRRRKKWWWWWWWWWWWWWWWWKKRRRRRRRRKQQDD....", // Lanternas e Placa alinhadas
-            "....DDQQKRRRRRRRRKKWWWWWWWWWWWWWWWWKKRRRRRRRRKQQDD....",
-            "....DDQQKRRRRRRRRKKWWWWWWWWWWWWWWWWKKRRRRRRRRKQQDD....",
-            "....DDQQGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGQQDD....",
-            "....DDQQGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGQQDD....",
-            "....DDQQGGEEEEEGGGGGGGGGGGGGGGGGGGGGGGGEEEEEGGQQDD....", // Escapamento Quadruplo
-            ".....TTTQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQTTTT.....",
-            ".....TTTTT..................................TTTTT.....", // Pneus na base extrema
-            "......TTTT..................................TTTT......"
-        ];
-
-        // Paleta de Cores Fiel ao Top Gear (Tons frios e dessaturados)
-        const PALETA_CORES = {
-            ".": "transparent",
-            "D": "#2B2B35", // Sombra/Contorno
-            "Q": "#6D7A8F", // Cinza Azulado (Carroceria)
-            "B": "#111111", // Vidro Preto
-            "W": "#E0E0E0", // Placa Branca
-            "R": "#CC0000", // Vermelho Sangue
-            "K": "#333333", // Moldura da Luz
-            "G": "#1A1A1A", // Para-choque
-            "E": "#000000", // Escapamento
-            "T": "#000000"  // Pneus
-        };
-
-        // Cria variação de cor para os carros inimigos
-        function getPaletaObstaculo(corHex) {
-            let p = {...PALETA_CORES}; 
-            p['Q'] = corHex; 
-            return p;
+        // --- MATEMÁTICA DE PERSPECTIVA ---
+        function getHorizonteY() { return canvas.height * PCT_CEU; }
+        
+        function getYPorProgresso(p) { 
+            const h = getHorizonteY(); 
+            const alturaPista = canvas.height - h; 
+            // Curva suave (p^3) para sensação de profundidade
+            return h + (alturaPista * Math.pow(p, 3)); 
         }
 
-        // --- RENDERIZAÇÃO PIXEL PERFECT ---
-        function desenharSpritePixel(ctx, x, y, scale, matrix, palette) {
-            // Centraliza o sprite baseado em sua largura
-            let startX = Math.floor(x - (matrix[0].length * scale) / 2);
-            let startY = Math.floor(y - (matrix.length * scale));
-
-            for (let r = 0; r < matrix.length; r++) {
-                for (let c = 0; c < matrix[0].length; c++) {
-                    let char = matrix[r][c];
-                    if (char !== '.' && palette[char]) {
-                        ctx.fillStyle = palette[char];
-                        // Garante que o pixel seja desenhado como um bloco sólido
-                        let s = Math.ceil(scale); 
-                        ctx.fillRect(startX + (c * s), startY + (r * s), s, s);
-                    }
-                }
-            }
+        function getLarguraPistaNoY(y) { 
+            const h = getHorizonteY(); 
+            const alturaPista = canvas.height - h;
+            if (y < h) return LARGURA_PISTA_TOPO; 
+            const progressoLinear = (y - h) / alturaPista; 
+            return LARGURA_PISTA_TOPO + (LARGURA_PISTA_BASE - LARGURA_PISTA_TOPO) * progressoLinear; 
         }
 
-        // --- MATEMÁTICA DA ESTRADA ---
-        function getYPorProgresso(p) {
-            // Curva exponencial para simular profundidade (Z-Axis)
-            let alturaPista = HEIGHT - HORIZONTE_Y;
-            return HORIZONTE_Y + (alturaPista * Math.pow(p, 3)); 
+        function getXNaPista(faixa, y) { 
+            const larguraAtual = getLarguraPistaNoY(y); 
+            const centro = canvas.width / 2; 
+            const indiceFaixa = faixa - 1; 
+            // Multiplica por 0.3 para centralizar nas faixas (30% da largura para cada lado)
+            return centro + (indiceFaixa * (larguraAtual / 3)); 
         }
 
-        function getLarguraPistaNoY(y) {
-            if (y < HORIZONTE_Y) return LARGURA_PISTA_TOPO;
-            let progressoLinear = (y - HORIZONTE_Y) / (HEIGHT - HORIZONTE_Y);
-            return LARGURA_PISTA_TOPO + (LARGURA_PISTA_BASE - LARGURA_PISTA_TOPO) * progressoLinear;
-        }
-
-        function getXNaPista(faixa, y) {
-            let largura = getLarguraPistaNoY(y);
-            // Faixas: -1, 0, 1
-            return CENTRO_X + ((faixa - 1) * (largura * 0.35)); 
-        }
-
-        // --- DRAW LOOP ---
-        function desenharFundo() {
-            // Céu Gradiente Noturno
-            let grd = ctx.createLinearGradient(0, 0, 0, HORIZONTE_Y);
-            grd.addColorStop(0, "#000000"); 
-            grd.addColorStop(0.5, "#090914");
-            grd.addColorStop(1, "#1c1c3c");
-            ctx.fillStyle = grd; 
-            ctx.fillRect(0, 0, WIDTH, HORIZONTE_Y);
+        // --- ARTE: CARRO TOP GEAR REALISTA (VETOR HD) ---
+        function desenharFerrari(ctx, x, y, scale, corPrincipal, isObstacle) {
+            const w = 60 * scale; 
+            const h = 35 * scale; 
             
-            // Estrelas simples (pixel noise)
-            ctx.fillStyle = "#FFF";
-            if(Math.random() > 0.5) ctx.fillRect(Math.random()*WIDTH, Math.random()*HORIZONTE_Y, 1, 1);
-            
-            // Chão
-            ctx.fillStyle = '#0f1f0f'; 
-            ctx.fillRect(0, HORIZONTE_Y, WIDTH, HEIGHT - HORIZONTE_Y);
-        }
+            ctx.save();
+            ctx.translate(x, y);
 
-        function desenharEstrada(vel) {
-            // Asfalto
-            ctx.fillStyle = '#3a3a3a';
+            // 1. Sombra Suave (Oval)
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
             ctx.beginPath();
-            ctx.moveTo(CENTRO_X - LARGURA_PISTA_TOPO/2, HORIZONTE_Y);
-            ctx.lineTo(CENTRO_X + LARGURA_PISTA_TOPO/2, HORIZONTE_Y);
-            ctx.lineTo(CENTRO_X + LARGURA_PISTA_BASE/2, HEIGHT);
-            ctx.lineTo(CENTRO_X - LARGURA_PISTA_BASE/2, HEIGHT);
+            ctx.ellipse(0, h*0.8, w*0.55, h*0.15, 0, 0, Math.PI*2);
             ctx.fill();
 
-            // Zebras Animadas
-            offsetPista += vel * 90; 
-            if (offsetPista > 20) offsetPista = 0;
+            // 2. Pneus Largos (Expostos embaixo)
+            ctx.fillStyle = '#151515';
+            // Pneu Esq
+            ctx.fillRect(-w/2 + w*0.05, h*0.4, w*0.25, h*0.5);
+            // Pneu Dir
+            ctx.fillRect(w/2 - w*0.30, h*0.4, w*0.25, h*0.5);
 
-            let passos = 24; 
-            for(let i=0; i<passos; i++) {
-                let progresso = (i / passos) + (offsetPista / 1000); 
-                progresso = progresso % 1;
-                
-                let y = getYPorProgresso(progresso);
-                if(y > HEIGHT) continue;
+            // 3. Chassi Principal (Corpo Largo e Baixo)
+            ctx.fillStyle = corPrincipal;
+            ctx.beginPath();
+            // Desenho trapezoidal complexo para parecer carro esportivo
+            ctx.moveTo(-w*0.5, h*0.7); // Base Esq Baixo
+            ctx.lineTo(w*0.5, h*0.7);  // Base Dir Baixo
+            ctx.lineTo(w*0.48, h*0.2); // Cintura Dir
+            ctx.lineTo(w*0.35, -h*0.3);// Teto Dir
+            ctx.lineTo(-w*0.35, -h*0.3);// Teto Esq
+            ctx.lineTo(-w*0.48, h*0.2); // Cintura Esq
+            ctx.closePath();
+            ctx.fill();
+            
+            // Sombreamento lateral (Volume)
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.beginPath();
+            ctx.moveTo(-w*0.5, h*0.7); ctx.lineTo(-w*0.48, h*0.2); ctx.lineTo(-w*0.4, h*0.2); ctx.lineTo(-w*0.42, h*0.7);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(w*0.5, h*0.7); ctx.lineTo(w*0.48, h*0.2); ctx.lineTo(w*0.4, h*0.2); ctx.lineTo(w*0.42, h*0.7);
+            ctx.fill();
 
-                let largura = getLarguraPistaNoY(y);
-                let zebraW = largura * 0.12; 
-
-                // Cor da Zebra (Vermelho e Branco clássico)
-                ctx.fillStyle = (i % 2 === 0) ? '#d63031' : '#ffffff';
-                
-                // Altura da faixa (perspectiva)
-                let alturaFaixa = 2 + (progresso * 6);
-
-                ctx.fillRect(CENTRO_X - largura/2 - zebraW, y, zebraW, alturaFaixa); // Esq
-                ctx.fillRect(CENTRO_X + largura/2, y, zebraW, alturaFaixa); // Dir
+            // 4. Vidro Traseiro (Escuro)
+            ctx.fillStyle = '#0a0a0a';
+            ctx.beginPath();
+            ctx.moveTo(-w*0.32, -h*0.25);
+            ctx.lineTo(w*0.32, -h*0.25);
+            ctx.lineTo(w*0.4, h*0.2);
+            ctx.lineTo(-w*0.4, h*0.2);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Reflexo no vidro
+            if (!isObstacle) {
+                ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                ctx.beginPath();
+                ctx.moveTo(-w*0.2, -h*0.2); ctx.lineTo(w*0.2, -h*0.2); ctx.lineTo(w*0.25, 0); ctx.lineTo(-w*0.25, 0);
+                ctx.fill();
             }
+
+            // 5. Painel Traseiro (Preto entre as luzes - Clássico Top Gear)
+            ctx.fillStyle = '#111';
+            ctx.fillRect(-w*0.45, h*0.3, w*0.9, h*0.3);
+
+            // 6. Lanternas (4 Quadradinhos ou Faixa)
+            // Vamos fazer 4 luzes redondas clássicas (Estilo Ferrari/GTR)
+            const luzY = h*0.45;
+            const raioLuz = w*0.06;
+            
+            // Cor da luz (Acesa ou Apagada)
+            ctx.fillStyle = '#c0392b'; // Vermelho escuro base
+            
+            // Luzes Esq
+            ctx.beginPath(); ctx.arc(-w*0.30, luzY, raioLuz, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(-w*0.15, luzY, raioLuz, 0, Math.PI*2); ctx.fill();
+            // Luzes Dir
+            ctx.beginPath(); ctx.arc(w*0.15, luzY, raioLuz, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(w*0.30, luzY, raioLuz, 0, Math.PI*2); ctx.fill();
+
+            // Brilho intenso no centro (Luz de Freio)
+            ctx.fillStyle = '#ff4d4d'; 
+            ctx.beginPath(); ctx.arc(-w*0.30, luzY, raioLuz*0.6, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(-w*0.15, luzY, raioLuz*0.6, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(w*0.15, luzY, raioLuz*0.6, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(w*0.30, luzY, raioLuz*0.6, 0, Math.PI*2); ctx.fill();
+
+            // 7. Aerofólio (Spoiler)
+            ctx.fillStyle = corPrincipal;
+            // Base do aerofolio
+            ctx.fillRect(-w*0.46, h*0.05, w*0.92, h*0.1); 
+            // Laterais do aerofolio
+            ctx.fillRect(-w*0.46, h*0.0, w*0.1, h*0.2);
+            ctx.fillRect(w*0.36, h*0.0, w*0.1, h*0.2);
+
+            // 8. Escapamentos (4 pontinhos prateados)
+            ctx.fillStyle = '#bdc3c7';
+            ctx.fillRect(-w*0.25, h*0.8, w*0.05, h*0.1);
+            ctx.fillRect(-w*0.15, h*0.8, w*0.05, h*0.1);
+            ctx.fillRect(w*0.10, h*0.8, w*0.05, h*0.1);
+            ctx.fillRect(w*0.20, h*0.8, w*0.05, h*0.1);
+
+            ctx.restore();
+        }
+
+        // --- SISTEMA DE FUMAÇA ---
+        function gerarFumaca(x, y) {
+            particulasFumaca.push({ 
+                x: x - 25, y: y + 30, // Saída Esq
+                vx: (Math.random() - 0.5) * 4, vy: Math.random() * 5 + 2, 
+                radius: Math.random() * 5 + 5, alpha: 0.6 
+            });
+            particulasFumaca.push({ 
+                x: x + 25, y: y + 30, // Saída Dir
+                vx: (Math.random() - 0.5) * 4, vy: Math.random() * 5 + 2, 
+                radius: Math.random() * 5 + 5, alpha: 0.6 
+            });
+        }
+        function desenharFumaca() {
+            for (let i = particulasFumaca.length - 1; i >= 0; i--) {
+                let p = particulasFumaca[i];
+                p.y -= p.vy; p.x += p.vx; p.radius += 1.5; p.alpha -= 0.04;
+                if (p.alpha <= 0) { particulasFumaca.splice(i, 1); continue; }
+                
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); 
+                ctx.fillStyle = `rgba(200, 200, 200, ${p.alpha})`; ctx.fill();
+            }
+        }
+
+        // --- CENARIO HD (Árvores e Pedras) ---
+        function desenharArvore(ctx, x, y, scale) {
+            const w = 60 * scale; const h = 120 * scale;
+            // Tronco
+            ctx.fillStyle = '#3e2723'; ctx.fillRect(x - w*0.15, y + h*0.8, w*0.3, h*0.2);
+            // Copas (3 triângulos sobrepostos)
+            ctx.fillStyle = '#1b5e20'; 
+            ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w/2, y + h*0.4); ctx.lineTo(x - w/2, y + h*0.4); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(x, y + h*0.2); ctx.lineTo(x + w*0.6, y + h*0.6); ctx.lineTo(x - w*0.6, y + h*0.6); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(x, y + h*0.4); ctx.lineTo(x + w*0.7, y + h*0.85); ctx.lineTo(x - w*0.7, y + h*0.85); ctx.fill();
+        }
+        function desenharPedra(ctx, x, y, scale) {
+            const w = 40 * scale; 
+            ctx.fillStyle = '#7f8c8d'; 
+            ctx.beginPath(); ctx.arc(x, y, w/2, Math.PI, 0); ctx.fill(); // Meio círculo
+            ctx.fillStyle = '#95a5a6'; // Brilho topo
+            ctx.beginPath(); ctx.arc(x - w*0.1, y - w*0.1, w*0.2, 0, Math.PI*2); ctx.fill();
+        }
+
+        function desenharFundo() {
+            const h = getHorizonteY();
+            // Céu com gradiente HD
+            let grd = ctx.createLinearGradient(0, 0, 0, h);
+            grd.addColorStop(0, "#0984e3"); grd.addColorStop(1, "#74b9ff"); // Céu azul dia
+            ctx.fillStyle = grd; ctx.fillRect(0, 0, canvas.width, h);
+            
+            // Sol ou Montanhas ao fundo (Decorativo)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'; // Nuvens
+            ctx.beginPath(); ctx.arc(canvas.width*0.2, h*0.8, 50, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(canvas.width*0.8, h*0.6, 80, 0, Math.PI*2); ctx.fill();
+
+            // Chão (Grama)
+            ctx.fillStyle = '#10ac84'; ctx.fillRect(0, h, canvas.width, canvas.height - h); 
+        }
+
+        function desenharEstrada(velocidadeProgresso) {
+            const h = getHorizonteY(); const centro = canvas.width / 2;
+            
+            // 1. Asfalto Base
+            ctx.fillStyle = '#576574'; 
+            ctx.beginPath();
+            ctx.moveTo(centro - LARGURA_PISTA_TOPO/2, h); 
+            ctx.lineTo(centro + LARGURA_PISTA_TOPO/2, h); 
+            ctx.lineTo(centro + LARGURA_PISTA_BASE/2, canvas.height); 
+            ctx.lineTo(centro - LARGURA_PISTA_BASE/2, canvas.height); 
+            ctx.fill();
+
+            // 2. Zebras Laterais (Trapézios que se movem)
+            offsetPista += velocidadeProgresso * 4000; 
+            if (offsetPista > 100) offsetPista = 0;
+            
+            let numFaixas = 12; // Quantidade de segmentos visíveis
+            for(let i=0; i<numFaixas; i++) {
+                // Cálculo de progresso cíclico
+                let pStart = (i / numFaixas) + (offsetPista / 1500);
+                pStart = pStart % 1;
+                let pEnd = ((i+0.5) / numFaixas) + (offsetPista / 1500);
+                pEnd = pEnd % 1;
+                
+                // Evita desenhar o que está "dando a volta" no horizonte
+                if(pEnd < pStart) continue;
+
+                let y1 = getYPorProgresso(pStart);
+                let y2 = getYPorProgresso(pEnd);
+                let w1 = getLarguraPistaNoY(y1);
+                let w2 = getLarguraPistaNoY(y2);
+                
+                // Zebra Vermelha e Branca
+                ctx.fillStyle = (i % 2 === 0) ? '#e74c3c' : '#ecf0f1';
+                
+                // Zebra Esq
+                ctx.beginPath();
+                ctx.moveTo(canvas.width/2 - w1/2, y1);
+                ctx.lineTo(canvas.width/2 - w2/2, y2);
+                ctx.lineTo(canvas.width/2 - w2/2 - w2*0.15, y2); // Largura zebra
+                ctx.lineTo(canvas.width/2 - w1/2 - w1*0.15, y1);
+                ctx.fill();
+
+                // Zebra Dir
+                ctx.beginPath();
+                ctx.moveTo(canvas.width/2 + w1/2, y1);
+                ctx.lineTo(canvas.width/2 + w2/2, y2);
+                ctx.lineTo(canvas.width/2 + w2/2 + w2*0.15, y2);
+                ctx.lineTo(canvas.width/2 + w1/2 + w1*0.15, y1);
+                ctx.fill();
+            }
+
+            // 3. Faixas Centrais (Tracejado)
+            ctx.strokeStyle = 'rgba(255,255,255,0.6)'; 
+            ctx.lineWidth = 4;
+            ctx.setLineDash([40, 60]); // Tracejado longo
+            ctx.lineDashOffset = -offsetPista * 4; // Move rápido
+            
+            // Faixa 1
+            ctx.beginPath();
+            // Truque: desenhar linha reta, mas a geometria faz parecer curva
+            // Para ser perfeito precisaria de curvas de Bézier, mas linhas funcionam bem em alta velocidade
+            const xEsqTopo = centro - LARGURA_PISTA_TOPO/6;
+            const xEsqBase = centro - LARGURA_PISTA_BASE/6;
+            ctx.moveTo(xEsqTopo, h); ctx.lineTo(xEsqBase, canvas.height);
+            ctx.stroke();
+
+            // Faixa 2
+            const xDirTopo = centro + LARGURA_PISTA_TOPO/6;
+            const xDirBase = centro + LARGURA_PISTA_BASE/6;
+            ctx.beginPath();
+            ctx.moveTo(xDirTopo, h); ctx.lineTo(xDirBase, canvas.height);
+            ctx.stroke();
+            
+            ctx.setLineDash([]); // Limpa
         }
 
         function desenharJogador() {
-            // Posição Y fixa na parte inferior da tela
-            // Ajustado para -25 pixels para mostrar os pneus inteiros
-            jogador.y = HEIGHT - 25; 
+            jogador.y = canvas.height - 120; 
+            jogador.x = getXNaPista(jogador.faixa, jogador.y);
             
-            let xAlvo = getXNaPista(jogador.faixa, jogador.y);
-            // Suavização do movimento (Lerp)
-            jogador.x += (xAlvo - jogador.x) * 0.15;
-            
+            // Suavização do movimento
             jogador.tiltAtual += (jogador.tiltAlvo - jogador.tiltAtual) * 0.15;
+
+            if(frameId % 3 === 0) gerarFumaca(jogador.x, jogador.y);
             
-            // Gerador de Fumaça
-            jogador.frameAnimacao++;
-            if(frameId % 5 === 0) gerarFumaca(jogador.x, jogador.y);
-
             ctx.save();
-            ctx.translate(Math.floor(jogador.x), Math.floor(jogador.y));
-            ctx.rotate((jogador.tiltAtual * Math.PI) / 180);
-
-            // DESENHA O CARRO
-            desenharSpritePixel(ctx, 0, 0, 1, SPRITE_CARRO_FINAL, PALETA_CORES);
+            ctx.translate(jogador.x, jogador.y + 40); // Pivô embaixo
+            ctx.rotate(jogador.tiltAtual * Math.PI / 180);
+            
+            // Desenha Ferrari
+            desenharFerrari(ctx, 0, -40, ESCALA_JOGADOR, jogador.cor, false);
             
             ctx.restore();
         }
 
-        function gerarFumaca(x, y) {
-            particulasFumaca.push({ x: x-18, y: y, vx: -0.5, vy: 1, life: 12 }); // Pneu Esq
-            particulasFumaca.push({ x: x+18, y: y, vx: 0.5, vy: 1, life: 12 });  // Pneu Dir
-        }
-        
-        function desenharFumaca() {
-            ctx.fillStyle = '#7f8c8d';
-            for(let i=particulasFumaca.length-1; i>=0; i--) {
-                let p = particulasFumaca[i];
-                p.x += p.vx; p.y -= p.vy; p.life--;
+        function gerenciarCenarioLateral(velocidadeProgresso) {
+            if (Math.random() < 0.05) { 
+                cenarioObjetos.push({ 
+                    tipo: Math.random() > 0.6 ? 'pedra' : 'arvore', 
+                    lado: Math.random() > 0.5 ? 1 : -1, 
+                    progresso: 0, 
+                    offsetAleatorio: Math.random() * 80 
+                });
+            }
+            const centro = canvas.width / 2;
+            for (let i = cenarioObjetos.length - 1; i >= 0; i--) {
+                let obj = cenarioObjetos[i];
+                obj.progresso += velocidadeprogresso; // Erro typo corrigido abaixo
+                obj.progresso += velocidadeProgresso; // Correção manual
                 
-                if(p.life <= 0) { particulasFumaca.splice(i,1); continue; }
+                const y = getYPorProgresso(obj.progresso);
                 
-                let s = p.life < 6 ? 2 : 1;
-                ctx.fillRect(Math.floor(p.x), Math.floor(p.y), s, s);
+                // Escala cresce mais rápido no final
+                let scale = ESCALA_HORIZONTE + (ESCALA_JOGADOR * 1.5 - ESCALA_HORIZONTE) * Math.pow(obj.progresso, 3);
+                if (scale < 0) scale = 0;
+                
+                const larguraPistaAqui = getLarguraPistaNoY(y);
+                // Posiciona bem longe da pista
+                const distanciaDoCentro = (larguraPistaAqui / 2) + (100 * scale) + obj.offsetAleatorio;
+                const x = centro + (distanciaDoCentro * obj.lado);
+                
+                if (obj.tipo === 'arvore') desenharArvore(ctx, x, y, scale * 1.2); 
+                else desenharPedra(ctx, x, y, scale);
+
+                if (obj.progresso > 1.2) cenarioObjetos.splice(i, 1);
             }
         }
 
-        function gerenciarObstaculos(vel) {
-            // Lógica de Spawn Inimigos
-            if (obstaculos.length === 0 || obstaculos[obstaculos.length-1].progresso > 0.3) {
-                if(Math.random() < 0.02) {
-                    let cores = ['#ff9ff3', '#feca57', '#54a0ff', '#5f27cd'];
-                    obstaculos.push({ 
-                        faixa: Math.floor(Math.random()*3), 
-                        progresso: 0, 
-                        cor: cores[Math.floor(Math.random()*cores.length)]
-                    });
-                }
+        function gerenciarObstaculos(velocidadeProgresso) {
+            let podeSpawnar = false;
+            // Spawn mais agressivo mas seguro
+            if (obstaculos.length === 0) podeSpawnar = true;
+            else if (obstaculos[obstaculos.length - 1].progresso > 0.35) podeSpawnar = true; // 35% da pista
+
+            if (podeSpawnar && Math.random() < 0.03) {
+                const cores = ['#2980b9', '#f39c12', '#8e44ad', '#27ae60']; // Azul, Laranja, Roxo, Verde
+                obstaculos.push({ 
+                    faixa: Math.floor(Math.random() * 3), 
+                    progresso: 0, 
+                    cor: cores[Math.floor(Math.random() * cores.length)] 
+                });
             }
 
-            for(let i=obstaculos.length-1; i>=0; i--) {
+            for (let i = obstaculos.length - 1; i >= 0; i--) {
                 let obs = obstaculos[i];
-                obs.progresso += vel * 0.6; // Inimigos são mais lentos que o cenário
+                obs.progresso += velocidadeProgresso * 0.8; // Inimigos são um pouco mais lentos que o cenário (efeito ultrapassagem)
                 
-                let y = getYPorProgresso(obs.progresso);
-                let x = getXNaPista(obs.faixa, y);
+                obs.y = getYPorProgresso(obs.progresso);
+                let scale = ESCALA_HORIZONTE + (ESCALA_JOGADOR - ESCALA_HORIZONTE) * Math.pow(obs.progresso, 3);
                 
-                // Scale Simples (0.1 no horizonte até 1.0 perto da tela)
-                let scale = Math.max(0.1, Math.pow(obs.progresso, 3));
-                
-                if (obs.progresso < 1.05) {
-                    let paleta = getPaletaObstaculo(obs.cor);
-                    desenharSpritePixel(ctx, x, y, scale, SPRITE_CARRO_FINAL, paleta);
+                const x = getXNaPista(obs.faixa, obs.y);
+
+                if (obs.progresso < 1.1) {
+                    desenharFerrari(ctx, x, obs.y, scale, obs.cor, true);
                 }
 
-                // Colisão
-                if (obs.progresso > 0.92 && obs.progresso < 0.98) {
-                    // hitbox simples baseada na largura da faixa
-                    if (Math.abs(x - jogador.x) < 30) gameOver(); 
+                // Colisão (Hitbox)
+                if (obs.progresso > 0.90 && obs.progresso < 0.98) {
+                    const distanciaX = Math.abs(x - jogador.x);
+                    if (obs.faixa === jogador.faixa && distanciaX < 80) gameOver();
                 }
-                
-                if (obs.progresso > 1.2) obstaculos.splice(i,1);
+                if (obs.progresso > 1.2) obstaculos.splice(i, 1);
             }
         }
 
-        // --- LOOP PRINCIPAL ---
         function loop() {
-            if(!jogoRodando) return;
+            if (!jogoRodando) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            ctx.clearRect(0, 0, WIDTH, HEIGHT);
-            
+            // Aumenta velocidade
             tempoDecorrido += 1/60;
-            // Dificuldade progressiva
-            if(tempoDecorrido - ultimoTempoNivel > 15) {
+            if(tempoDecorrido - ultimoTempoNivel > 15 && tempoTotalPista > 1.0) {
                 ultimoTempoNivel = tempoDecorrido;
-                if(tempoTotalPista > 0.8) tempoTotalPista -= 0.15;
-                document.getElementById('nivel-info').innerText = "SPEED UP! LEVEL " + Math.floor(tempoDecorrido/15);
+                tempoTotalPista -= 0.3;
+                document.getElementById('nivel-info').innerText = "GEAR UP!";
             }
 
-            let velocidade = 1 / (tempoTotalPista * 60);
+            const velocidadeAtual = 1.0 / (tempoTotalPista * 60);
 
             desenharFundo();
-            desenharEstrada(velocidade);
+            gerenciarCenarioLateral(velocidadeAtual);
+            desenharEstrada(velocidadeAtual);
             desenharFumaca();
             
-            gerenciarObstaculos(velocidade);
-            desenharJogador();
+            pontuacao++; 
+            document.getElementById('score').innerText = Math.floor(pontuacao/10).toString().padStart(4, '0');
             
-            pontuacao += 1;
-            document.getElementById('score').innerText = pontuacao.toString().padStart(6,'0');
-
+            gerenciarObstaculos(velocidadeAtual);
+            desenharJogador();
             frameId = requestAnimationFrame(loop);
         }
 
-        // --- CONTROLES ---
         function iniciarJogo() {
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('mobileControls').style.display = 'flex';
-            jogoRodando = true; pontuacao = 0; obstaculos = []; particulasFumaca = [];
-            tempoDecorrido = 0; tempoTotalPista = 2.0;
+            jogoRodando = true; pontuacao = 0; obstaculos = []; cenarioObjetos = []; particulasFumaca = [];
+            tempoDecorrido = 0; tempoTotalPista = 2.5;
+            if (document.documentElement.requestFullscreen) { document.documentElement.requestFullscreen().catch((e)=>{}); }
+            resize();
             loop();
         }
 
         function gameOver() {
             jogoRodando = false; cancelAnimationFrame(frameId);
-            setTimeout(() => { 
-                alert("CRASH! Score: " + pontuacao); 
-                location.reload(); 
-            }, 100);
+            setTimeout(() => { alert(`CRASHED! Score: ${Math.floor(pontuacao/10)}`); location.reload(); }, 100);
         }
 
-        function mover(dir) {
-            if(!jogoRodando) return;
-            let n = jogador.faixa + dir;
-            if(n >= 0 && n <= 2) {
-                jogador.faixa = n;
-                jogador.tiltAlvo = dir * 8; // Inclina o carro ao virar
+        function mover(direcao) {
+            if (!jogoRodando) return;
+            let novaFaixa = jogador.faixa + direcao;
+            if (novaFaixa >= 0 && novaFaixa <= 2) { 
+                jogador.faixa = novaFaixa; 
+                jogador.tiltAlvo = direcao * 15; // Inclinação mais agressiva
             }
         }
-        function endireitar() { jogador.tiltAlvo = 0; }
+        function endireitar() { if (!jogoRodando) return; jogador.tiltAlvo = 0; }
 
-        window.addEventListener('keydown', e => {
-            if(e.key==='ArrowLeft'||e.key==='a') mover(-1);
-            if(e.key==='ArrowRight'||e.key==='d') mover(1);
-        });
-        window.addEventListener('keyup', endireitar);
-        
-        const bL = document.getElementById('btnLeft');
-        const bR = document.getElementById('btnRight');
-        bL.addEventListener('touchstart', e => { e.preventDefault(); mover(-1); });
-        bR.addEventListener('touchstart', e => { e.preventDefault(); mover(1); });
-        bL.addEventListener('touchend', endireitar);
-        bR.addEventListener('touchend', endireitar);
-        
-        // Suporte a Mouse Click para testes no PC
-        bL.addEventListener('mousedown', e => { mover(-1); });
-        bR.addEventListener('mousedown', e => { mover(1); });
-        bL.addEventListener('mouseup', endireitar);
-        bR.addEventListener('mouseup', endireitar);
+        document.addEventListener('keydown', (e) => { if(!jogoRodando) return; if(e.key==='ArrowLeft'||e.key==='a') mover(-1); if(e.key==='ArrowRight'||e.key==='d') mover(1); });
+        document.addEventListener('keyup', (e) => { endireitar(); });
+        const bL = document.getElementById('btnLeft'); const bR = document.getElementById('btnRight');
+        bL.addEventListener('touchstart', e => { e.preventDefault(); mover(-1); }); bR.addEventListener('touchstart', e => { e.preventDefault(); mover(1); });
+        bL.addEventListener('touchend', endireitar); bR.addEventListener('touchend', endireitar);
 
     </script>
 </body>
